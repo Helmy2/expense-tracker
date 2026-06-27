@@ -13,8 +13,6 @@ class ExpenseViewModel(
 ) : MviViewModel<ExpenseState, ExpenseAction, ExpenseEvent>(
     initialState = ExpenseState(),
 ) {
-    private var pendingDeleteId: String? = null
-
     override suspend fun handleAction(action: ExpenseAction) {
         when (action) {
             is ExpenseAction.Load -> load()
@@ -31,16 +29,9 @@ class ExpenseViewModel(
                 it.copy(categoryMenuExpanded = false)
             }
             is ExpenseAction.SaveTransaction -> saveTransaction()
-            is ExpenseAction.DeleteTransaction -> {
-                pendingDeleteId = action.id
-            }
-            is ExpenseAction.ConfirmDelete -> {
-                pendingDeleteId?.let { deleteTransaction(it) }
-                pendingDeleteId = null
-            }
-            is ExpenseAction.CancelDelete -> {
-                pendingDeleteId = null
-            }
+            is ExpenseAction.DeleteTransaction -> deleteTransaction(action.id)
+            is ExpenseAction.ConfirmDelete -> { /* unused - confirmation is local in UI */ }
+            is ExpenseAction.CancelDelete -> { /* unused - confirmation is local in UI */ }
             is ExpenseAction.ToggleFormSheet -> updateState {
                 it.copy(showBottomSheet = !it.showBottomSheet)
             }

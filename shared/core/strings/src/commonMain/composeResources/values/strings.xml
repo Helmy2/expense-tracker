@@ -31,7 +31,8 @@
     <string name="expense_expenses_label">Expenses</string>
     <string name="expense_transactions_label">Transactions</string>
     <string name="expense_delete_title">Delete Transaction</string>
-    <string name="expense_delete_confirm">Are you sure?</string>
+    <string name="expense_delete_body">Are you sure?</string>
+    <string name="expense_delete_confirm">Delete</string>
     <string name="expense_delete_dismiss">Cancel</string>
     <string name="expense_dashboard_label">Dashboard</string>
     <string name="expense_type_label">Type</string>

@@ -195,7 +195,6 @@ class ExpenseViewModelTest {
         advanceUntilIdle()
 
         viewModel.onAction(ExpenseAction.DeleteTransaction("tx-1"))
-        viewModel.onAction(ExpenseAction.ConfirmDelete)
         advanceUntilIdle()
 
         assertEquals(1, repository.deleteCount)
@@ -211,7 +210,6 @@ class ExpenseViewModelTest {
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
 
-        viewModel.onAction(ExpenseAction.DeleteTransaction("tx-1"))
         viewModel.onAction(ExpenseAction.CancelDelete)
         advanceUntilIdle()
 

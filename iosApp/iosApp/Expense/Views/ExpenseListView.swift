@@ -53,6 +53,7 @@ struct ExpenseListView: View {
                             }
                         }
                 }
+                .presentationDetents([.medium])
             }
             .alert("expense_delete_title", isPresented: $viewModel.showingDeleteConfirmation) {
                 Button("expense_cancel", role: .cancel) { }

@@ -32,7 +32,10 @@ struct TransactionRowView: View {
 
             Button(action: onDelete) {
                 Image(systemName: "trash")
-                    .foregroundColor(colors.onSurfaceVariant)
+                    .font(.system(size: 15))
+                    .foregroundStyle(colors.onSurfaceVariant)
+                    .padding(10)
+                    .background(.regularMaterial, in: Circle())
             }
             .accessibilityLabel(String(localized: "expense_ios_delete_accessibility"))
         }

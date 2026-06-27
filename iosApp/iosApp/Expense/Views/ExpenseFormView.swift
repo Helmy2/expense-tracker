@@ -69,5 +69,8 @@ struct ExpenseFormView: View {
                 Task { await viewModel.saveTransaction() }
             }
         }
+        .padding(.horizontal, DreamSpacing.md)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(.regularMaterial)
     }
 }

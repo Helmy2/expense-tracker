@@ -1,8 +1,11 @@
 package com.expense.tracker.feature.expense.impl
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,7 +25,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,17 +50,17 @@ import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.expense_amount_label
 import com.expense.tracker.shared.core.strings.expense_amount_validation
 import com.expense.tracker.shared.core.strings.expense_balance_label
+import com.expense.tracker.shared.core.strings.expense_category_education
+import com.expense.tracker.shared.core.strings.expense_category_entertainment
 import com.expense.tracker.shared.core.strings.expense_category_food
 import com.expense.tracker.shared.core.strings.expense_category_healthcare
-import com.expense.tracker.shared.core.strings.expense_category_label
 import com.expense.tracker.shared.core.strings.expense_category_other
 import com.expense.tracker.shared.core.strings.expense_category_rent
 import com.expense.tracker.shared.core.strings.expense_category_salary
 import com.expense.tracker.shared.core.strings.expense_category_shopping
 import com.expense.tracker.shared.core.strings.expense_category_transportation
-import com.expense.tracker.shared.core.strings.expense_category_education
-import com.expense.tracker.shared.core.strings.expense_category_entertainment
 import com.expense.tracker.shared.core.strings.expense_category_utilities
+import com.expense.tracker.shared.core.strings.expense_delete_body
 import com.expense.tracker.shared.core.strings.expense_delete_confirm
 import com.expense.tracker.shared.core.strings.expense_delete_dismiss
 import com.expense.tracker.shared.core.strings.expense_delete_title
@@ -82,6 +85,7 @@ import com.expense.tracker.shared.designsystem.components.CardVariant
 import com.expense.tracker.shared.designsystem.components.CircularProgressIndicator
 import com.expense.tracker.shared.designsystem.components.ComponentSize
 import com.expense.tracker.shared.designsystem.components.Dialog
+import com.expense.tracker.shared.designsystem.components.IconButton
 import com.expense.tracker.shared.designsystem.components.ListItem
 import com.expense.tracker.shared.designsystem.components.Menu
 import com.expense.tracker.shared.designsystem.components.SegmentedButton
@@ -102,19 +106,14 @@ fun ExpenseContent(
     val mapper = remember { ExpensePresentationMapper(SystemTimeProvider) }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .imePadding()
-            .verticalScroll(rememberScrollState())
+        modifier = modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState())
             .padding(horizontal = DreamTheme.spacing.md, vertical = DreamTheme.spacing.sm),
         verticalArrangement = Arrangement.spacedBy(DreamTheme.spacing.sm),
     ) {
         when (val contentState = state.contentState) {
             is ExpenseContentState.Loading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier = Modifier.fillMaxWidth().weight(1f),
                     contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator(size = ComponentSize.Large)
@@ -185,9 +184,7 @@ private fun DashboardSection(dashboard: DashboardSummary) {
         )
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = DreamTheme.spacing.md),
+            modifier = Modifier.fillMaxWidth().padding(top = DreamTheme.spacing.md),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             DashboardMetric(
@@ -241,8 +238,9 @@ private fun FormSheetContent(
     state: ExpenseState,
     onAction: (ExpenseAction) -> Unit,
 ) {
-    val amountError = state.amountText.isNotEmpty() &&
-        (state.amountText.toDoubleOrNull() == null || (state.amountText.toDoubleOrNull() ?: 0.0) <= 0)
+    val amountError =
+        state.amountText.isNotEmpty() && (state.amountText.toDoubleOrNull() == null || (state.amountText.toDoubleOrNull()
+            ?: 0.0) <= 0)
     val isFormValid = state.amountText.toDoubleOrNull()?.let { it > 0 } == true
 
     Column(
@@ -353,29 +351,50 @@ private fun CategoryDropdown(
     onDismiss: () -> Unit,
     onSelect: (TransactionCategory) -> Unit,
 ) {
-    Box {
+    BoxWithConstraints {
         TextField(
             value = selectedCategory.asLabel(),
             onValueChange = {},
             readOnly = true,
             trailingIcon = {
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = null,
-                )
+                IconButton(onClick = onToggle) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = null,
+                    )
+                }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Transparent overlay to make the entire read-only field clickable
+        Box(
+            modifier = Modifier.matchParentSize().clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onToggle,
+            )
         )
 
         Menu(
             expanded = expanded,
             onDismissRequest = onDismiss,
+            modifier = Modifier.width(maxWidth),
         ) {
             TransactionCategory.entries.forEach { category ->
-                androidx.compose.material3.DropdownMenuItem(
-                    text = { Text(text = category.asLabel()) },
-                    onClick = { onSelect(category) },
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth().clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { onSelect(category) },
+                    ).padding(vertical = DreamTheme.spacing.sm),
+                ) {
+                    Text(
+                        text = category.asLabel(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
         }
     }
@@ -440,13 +459,10 @@ private fun TransactionItem(
         supportingText = "${transaction.category.asLabel()} \u00B7 $formattedDate",
         leadingContent = {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isIncome) IncomeGreen.copy(alpha = 0.15f)
-                        else ExpenseRed.copy(alpha = 0.15f)
-                    ),
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(
+                    if (isIncome) IncomeGreen.copy(alpha = 0.15f)
+                    else ExpenseRed.copy(alpha = 0.15f)
+                ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -470,11 +486,11 @@ private fun TransactionItem(
     if (showDeleteDialog) {
         Dialog(
             title = stringResource(Res.string.expense_delete_title),
-            text = stringResource(Res.string.expense_delete_confirm),
+            text = stringResource(Res.string.expense_delete_body),
             onDismissRequest = { showDeleteDialog = false },
             confirmButton = {
                 Button(
-                    text = stringResource(Res.string.expense_delete_confirm),
+            text = stringResource(Res.string.expense_delete_confirm),
                     onClick = {
                         showDeleteDialog = false
                         onDelete()
