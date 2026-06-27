@@ -1,0 +1,9 @@
+name: expense-tracker
+goal: Generated Kotlin Multiplatform MVP application.
+templateArchitecture: modular-hybrid
+platforms:
+  - android
+  - ios
+iosUiStrategy: swiftui
+backend:
+  enabled: false

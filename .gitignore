@@ -1,0 +1,16 @@
+.DS_Store
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
+
+# Local machine config
+local.properties
+
+# Xcode user data
+xcuserdata/

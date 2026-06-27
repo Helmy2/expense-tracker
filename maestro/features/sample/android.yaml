@@ -1,0 +1,32 @@
+appId: com.expense.tracker.android
+---
+- clearState
+- launchApp
+- assertVisible:
+      text: "expense-tracker"
+      optional: true
+- assertVisible: "Contract-first features"
+- tapOn: "Add"
+- tapOn: "Title"
+- inputText: "Temp"
+- tapOn: "Description"
+- inputText: "Draft"
+- tapOn: "Save changes"
+- assertVisible: "Temp"
+- assertVisible: "Occurred: .*"
+- tapOn: "Temp"
+- assertVisible: "Sample detail"
+- assertVisible: "Occurred: .*"
+- tapOn: "Edit"
+- tapOn:
+      text: "Temp"
+- eraseText: 16
+- inputText: "Updated"
+- tapOn:
+      text: "Draft"
+- eraseText: 16
+- inputText: "Saved"
+# Save should remain reachable while the IME may still be open; assert the outcome instead of keyboard state.
+- tapOn: "Save changes"
+- assertVisible: "Updated"
+- assertVisible: "Occurred: .*"

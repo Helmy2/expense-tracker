@@ -1,0 +1,8 @@
+template: dream-kmp-base
+architecture: modular-hybrid
+iosUi: swiftui
+storage: local-room
+sampleStarterData:
+  persistence: room
+  seedContent: stable resource keys stored in data and resolved by presentation shared string resources
+  userEnteredContent: raw create/update text persisted locally

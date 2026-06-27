@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sample_title">expense-tracker</string>
+    <string name="sample_subtitle">Reusable starting point for generated mobile-first apps.</string>
+    <string name="sample_baseline_label">Template baseline for contract-first, local-first KMP apps.</string>
+    <string name="sample_loading_title">Preparing the starter project</string>
+    <string name="sample_loading_body">Dream is loading the sample content and reusable architecture guidance.</string>
+    <string name="sample_empty_title">No starter cards yet</string>
+    <string name="sample_empty_body">The template is ready, but no sample content was returned. Add the first real feature next.</string>
+    <string name="sample_error_title">Starter content failed to load</string>
+    <string name="sample_error_body">Something went wrong while loading the starter content.</string>
+    <string name="sample_retry">Retry</string>
+    <string name="sample_add">Add</string>
+    <string name="sample_detail_title">Sample detail</string>
+    <string name="sample_edit">Edit</string>
+    <string name="sample_save">Save changes</string>
+    <string name="sample_cancel">Cancel</string>
+    <string name="sample_title_label">Title</string>
+    <string name="sample_description_label">Description</string>
+    <string name="sample_validation_required">Required</string>
+    <string name="sample_occurred_row">Occurred: %1$s</string>
+    <string name="sample_category_contract">Contract</string>
+    <string name="sample_category_architecture">Architecture</string>
+    <string name="sample_category_preview">Preview</string>
+    <string name="sample_category_label">Category</string>
+    <string name="sample_occurred_label">Occurred</string>
+    <string name="sample_seed_contract_first_title">Contract-first features</string>
+    <string name="sample_seed_contract_first_description">Generate features from compact contracts stored in .features/.</string>
+    <string name="sample_seed_shared_architecture_title">Shared architecture</string>
+    <string name="sample_seed_shared_architecture_description">Keep domain, data, presentation, and UI code in stable modules.</string>
+</resources>
