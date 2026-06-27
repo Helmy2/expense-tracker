@@ -1,0 +1,23 @@
+appId: com.expense.tracker.ios
+---
+- clearState
+- launchApp
+- assertVisible: "Expense Tracker"
+- assertVisible: "No transactions yet"
+# Tap the plus button to open the bottom sheet form
+- tapOn:
+    id: "plus"
+- assertVisible: "New Transaction"
+# Add an expense - amount field
+- tapOn:
+    text: "0.00"
+- inputText: "25.50"
+- pressKey: Enter
+# Dismiss keyboard before interacting with category
+- tapOn: "Expense"
+- tapOn: "Save"
+# Verify the transaction appears in the list
+- assertVisible: ".*-US\\$25\\.50.*"
+- assertVisible: "Food.*27 Jun 2026"
+- assertVisible: "Balance"
+- assertVisible: "Transactions"

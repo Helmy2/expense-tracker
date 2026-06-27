@@ -1,0 +1,21 @@
+appId: com.expense.tracker.android
+---
+- clearState
+- launchApp
+- assertVisible: "Expense Tracker"
+- assertVisible: "No transactions yet"
+# Tap the add icon (plus) in the top-right corner to open the bottom sheet form
+- tapOn:
+    point: "90%,7%"
+- waitForAnimationToEnd
+- assertVisible: "New Transaction"
+# Tap the Amount field to focus it
+- tapOn: "Amount"
+- inputText: "42.00"
+- pressKey: Back
+# Tap Save to submit
+- tapOn: "Save"
+# Verify the transaction appears in the list
+- assertVisible: ".*42\\.00.*"
+- assertVisible: "Transactions"
+- assertVisible: "Balance"

@@ -2,13 +2,13 @@ package com.expense.tracker.shared.di
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.expense.tracker.feature.sample.data.repository.RoomSampleRepository
-import com.expense.tracker.feature.sample.domain.repository.SampleRepository
+import com.expense.tracker.feature.expense.data.local.TransactionDao
+import com.expense.tracker.feature.expense.data.local.TransactionDatabase
+import com.expense.tracker.feature.expense.data.local.TransactionDatabaseFactory
+import com.expense.tracker.feature.expense.data.local.createTransactionDatabase
+import com.expense.tracker.feature.expense.data.repository.RoomTransactionRepository
+import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
 import com.expense.tracker.shared.core.data.datastore.createDataStore
-import com.expense.tracker.shared.core.data.local.SampleDatabase
-import com.expense.tracker.shared.core.data.local.SampleDatabaseFactory
-import com.expense.tracker.shared.core.data.local.SampleItemDao
-import com.expense.tracker.shared.core.data.local.createSampleDatabase
 import com.expense.tracker.shared.core.data.network.HttpClientFactory
 import com.expense.tracker.shared.core.data.session.DataStoreSessionStorage
 import com.expense.tracker.shared.core.domain.SystemTimeProvider
@@ -18,15 +18,14 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-fun sampleDataModule(
-    sampleDatabaseFactory: SampleDatabaseFactory,
+fun expenseDataModule(
+    transactionDatabaseFactory: TransactionDatabaseFactory,
     appContext: Any? = null,
 ) = module {
     single<TimeProvider> { SystemTimeProvider }
-    single { sampleDatabaseFactory }
-    single<SampleDatabase> { createSampleDatabase(get()) }
-    single<SampleItemDao> { get<SampleDatabase>().sampleItemDao() }
-    singleOf(::RoomSampleRepository).bind<SampleRepository>()
+    single<TransactionDatabase> { createTransactionDatabase(transactionDatabaseFactory) }
+    single<TransactionDao> { get<TransactionDatabase>().transactionDao() }
+    singleOf(::RoomTransactionRepository).bind<TransactionRepository>()
 
     single<DataStore<Preferences>> { createDataStore(appContext) }
     singleOf(::DataStoreSessionStorage).bind<SessionStorage>()

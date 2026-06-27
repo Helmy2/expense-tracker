@@ -5,8 +5,8 @@ plugins {
 }
 
 dependencies {
-    commonMainApi(projects.feature.sample.data)
-    commonMainApi(projects.feature.sample.domain)
+    commonMainApi(projects.feature.expense.data)
+    commonMainApi(projects.feature.expense.domain)
     commonMainApi(projects.shared.core.data)
     commonMainApi(projects.shared.core.domain)
     commonMainImplementation(libs.koin.core)
@@ -22,8 +22,8 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "SharedCore"
             isStatic = true
-            export(projects.feature.sample.data)
-            export(projects.feature.sample.domain)
+            export(projects.feature.expense.data)
+            export(projects.feature.expense.domain)
             export(projects.shared.core.data)
             export(projects.shared.core.domain)
         }

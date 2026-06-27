@@ -4,9 +4,9 @@ import Foundation
 final class AppDependencies {
     static let shared = AppDependencies()
 
-    let bridge: any SampleRepositoryBridge
+    let expenseBridge: any TransactionRepositoryBridge
 
     private init() {
-        bridge = SharedCoreBridge()
+        expenseBridge = SharedTransactionRepositoryBridge()
     }
 }

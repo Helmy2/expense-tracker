@@ -1,0 +1,114 @@
+name: expense
+goal: Update the expense tracker dashboard layout and move the input form into a bottom sheet
+parentContract: app-contract.yaml
+entities:
+  - name: Transaction
+    fields:
+      - name: id
+        type: String
+      - name: amount
+        type: Double
+      - name: type
+        type: TransactionType
+        values: [INCOME, EXPENSE]
+      - name: category
+        type: TransactionCategory
+        values: [FOOD, RENT, SALARY, ENTERTAINMENT, TRANSPORTATION, UTILITIES, SHOPPING, HEALTHCARE, EDUCATION, OTHER]
+      - name: note
+        type: String
+      - name: createdAtMillis
+        type: Long
+        description: Persisted timestamp via TimeProvider.nowMillis()
+  - name: DashboardSummary
+    fields:
+      - name: totalBalance
+        type: Double
+      - name: totalIncome
+        type: Double
+      - name: totalExpenses
+        type: Double
+actions:
+  - name: Load
+    description: Load all transactions and compute dashboard
+    inputs: []
+  - name: AmountChanged
+    inputs: [value: String]
+  - name: TypeSelected
+    inputs: [type: TransactionType]
+  - name: CategorySelected
+    inputs: [category: TransactionCategory]
+  - name: NoteChanged
+    inputs: [value: String]
+  - name: ToggleCategoryMenu
+    description: Open/close category dropdown in form
+    inputs: []
+  - name: DismissCategoryMenu
+    description: Close category dropdown
+    inputs: []
+  - name: SaveTransaction
+    description: Save the current form as a new transaction; resets form on success
+    inputs: []
+  - name: DeleteTransaction
+    inputs: [id: String]
+  - name: ConfirmDelete
+    description: Confirm the pending delete
+    inputs: []
+  - name: CancelDelete
+    description: Cancel the pending delete
+    inputs: []
+  - name: ToggleFormSheet
+    description: Open or close the bottom sheet containing the transaction input form
+    inputs: []
+  - name: DismissFormSheet
+    description: Close the bottom sheet
+    inputs: []
+screens:
+  - name: main
+    description: Single-screen expense tracker with dashboard, bottom-sheet form, and transaction list
+    states:
+      - name: Loading
+        design: Full-screen centered CircularProgressIndicator
+      - name: Empty
+        design: Empty state card with message, list area absent (no transactions yet). Form sheet is still accessible via the top-right icon button.
+      - name: Content
+        design: Dashboard section (balance line + income/expenses sub-row), transaction list, and form accessible via top-right sheet trigger
+      - name: Error
+        design: Error card with retry button
+    layout:
+      - Top app bar: title "Expense Tracker", trailing icon (add/plus) button to toggle the form bottom sheet
+      - Dashboard:
+          - Total Balance: prominent single line, full width, large text
+          - Below: Row with "Total Income" (green) and "Total Expenses" (red) side by side
+      - Transaction list: items with amount (+/- prefix), category, date, delete button
+      - Bottom Sheet (Modal): contains form fields (amount, type, category, note, save button)
+    interactions:
+      - Tap top-right icon → opens bottom sheet with form
+      - Fill form fields → tap Save → transaction saved, sheet closes, list refreshes
+      - Swipe down or tap outside → dismiss bottom sheet
+      - Delete icon on transaction → confirmation dialog → delete on confirm
+    timeSensitiveBehavior:
+      usesTimeProvider: true
+      details: createdAtMillis set via TimeProvider.nowMillis() in repository; dates displayed via TimeProvider.formatDate()
+designExpectations:
+  dashboard:
+    - Total Balance appears prominently as the first element
+    - Balance value uses large title font, on a single line
+    - Income and Expenses are secondary, shown in a row below the balance
+    - Income value is green, Expenses value is red
+  formSheet:
+    - Bottom sheet contains: Amount field, Type segmented selector, Category dropdown, Note field, Save button
+    - Sheet has a visible handle/drag indicator
+    - Sheet is dismissible by swipe-down or tapping the icon again
+    - Form is not inline in the main scroll anymore
+storage: local-room (unchanged)
+requiredTests:
+  domain:
+    - DashboardSummary: empty, income-only, expense-only, mixed (unchanged)
+    - Transaction model construction (unchanged)
+  data:
+    - Entity/domain mapping (unchanged)
+    - Repository behavior with fake DAO (unchanged)
+  presentation:
+    - ViewModel: starts loading, load→empty, load→content, load→error, save with valid/invalid input, delete/cancel, dashboard recompute
+    - NEW: ToggleFormSheet and DismissFormSheet actions toggle/showBottomSheet state correctly
+    - UI: no direct UI tests required (manual/Maestro verification for dashboard layout and sheet existence)

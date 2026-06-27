@@ -1,5 +1,5 @@
 name: expense-tracker
-goal: Generated Kotlin Multiplatform MVP application.
+goal: Generated Kotlin Multiplatform MVP application — a modern single-screen expense tracker with dashboard, input form, and transaction history.
 templateArchitecture: modular-hybrid
 platforms:
   - android
@@ -7,3 +7,5 @@ platforms:
 iosUiStrategy: swiftui
 backend:
   enabled: false
+features:
+  - expense
