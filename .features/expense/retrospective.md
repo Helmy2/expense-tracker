@@ -66,8 +66,10 @@
 
 ## Application Status
 
-- Applied: `not yet`
-- What was updated: *(not yet)*
+- Applied: `2026-06-27`
+- What was updated:
+  - `.opencode/guidance/new-feature-checklist.md` — Added explicit verification steps in Sample Removal section to confirm cleanup of Maestro sample flows (`maestro/features/sample/`), Room schema export directories (`shared/core/data/schemas/`), and settings/build file references.
+  - `.opencode/knowledge-graph/best-practices/26-anti-patterns-to-avoid-when-reusing-this-architecture.md` — Broadened anti-pattern #17 to explicitly cover leftover sample artifacts (Room schema exports, Maestro flow directories, sample string keys, stray imports) with a reference to `./scripts/remove-sample.sh`.
 
 ## Bottom Line
 
