@@ -14,3 +14,8 @@ local.properties
 
 # Xcode user data
 xcuserdata/
+
+# Dream AI agent scaffolding
+.opencode/
+scripts/
+AGENTS.md
