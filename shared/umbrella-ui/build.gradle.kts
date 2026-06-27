@@ -4,11 +4,15 @@ plugins {
 
 dependencies {
     commonMainImplementation(projects.shared.umbrellaCore)
+    commonMainImplementation(projects.feature.budget.data)
+    commonMainImplementation(projects.feature.budget.domain)
+    commonMainImplementation(projects.feature.budget.impl)
     commonMainImplementation(projects.feature.expense.data)
     commonMainImplementation(projects.feature.expense.domain)
     commonMainImplementation(projects.shared.core.presentation)
     commonMainApi(projects.shared.designsystem)
     commonMainApi(projects.shared.navigation)
+    commonMainApi(projects.feature.budget.api)
     commonMainApi(projects.feature.expense.api)
     commonMainImplementation(projects.feature.expense.impl)
     commonMainImplementation(libs.compose.runtime)

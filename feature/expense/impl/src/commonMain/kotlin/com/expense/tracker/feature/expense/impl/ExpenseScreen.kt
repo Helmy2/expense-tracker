@@ -17,8 +17,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 
 import com.expense.tracker.shared.core.strings.Res
+import com.expense.tracker.shared.core.strings.expense_budgets_button
 import com.expense.tracker.shared.core.strings.expense_saved_snackbar
 import com.expense.tracker.shared.core.strings.expense_title
+import com.expense.tracker.shared.designsystem.components.Button
+import com.expense.tracker.shared.designsystem.components.ButtonVariant
 import com.expense.tracker.shared.designsystem.components.IconButton
 import com.expense.tracker.shared.designsystem.components.TopAppBar
 import org.jetbrains.compose.resources.stringResource
@@ -29,6 +32,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ExpenseScreen(
     viewModel: ExpenseViewModel = koinViewModel(),
     onNavigateBack: () -> Unit = {},
+    onNavigateToBudgets: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -59,6 +63,11 @@ fun ExpenseScreen(
                 title = stringResource(Res.string.expense_title),
                 navigationIcon = {},
                 actions = {
+                    Button(
+                        text = stringResource(Res.string.expense_budgets_button),
+                        onClick = onNavigateToBudgets,
+                        variant = ButtonVariant.Tertiary,
+                    )
                     IconButton(onClick = { viewModel.onAction(ExpenseAction.ToggleFormSheet) }) {
                         Icon(
                             imageVector = Icons.Filled.Add,

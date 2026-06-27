@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    commonMainImplementation(projects.feature.budget.api)
     commonMainImplementation(projects.feature.expense.api)
     commonMainImplementation(projects.feature.expense.domain)
     commonMainImplementation(projects.shared.core.domain)

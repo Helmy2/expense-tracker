@@ -1,5 +1,7 @@
 package com.expense.tracker.shared.di
 
+import com.expense.tracker.feature.budget.data.local.BudgetDatabaseFactory
+import com.expense.tracker.feature.budget.impl.di.budgetUiModule
 import com.expense.tracker.feature.expense.api.navigation.ExpenseRoute
 import com.expense.tracker.feature.expense.data.local.TransactionDatabaseFactory
 import com.expense.tracker.feature.expense.impl.di.expenseUiModule
@@ -17,18 +19,26 @@ private var hasStartedKoin = false
 
 fun initKoin(
     transactionDatabaseFactory: TransactionDatabaseFactory,
+    budgetDatabaseFactory: BudgetDatabaseFactory? = null,
     appContext: Any? = null,
     appDeclaration: KoinAppDeclaration = {}
 ) {
     if (hasStartedKoin) return
 
+    val coreModules = mutableListOf(
+        expenseDataModule(transactionDatabaseFactory, appContext),
+        expenseUiModule,
+        budgetUiModule,
+        navigatorModule,
+    )
+
+    if (budgetDatabaseFactory != null) {
+        coreModules.add(budgetDataModule(budgetDatabaseFactory))
+    }
+
     startKoin {
         appDeclaration()
-        modules(
-            expenseDataModule(transactionDatabaseFactory, appContext),
-            expenseUiModule,
-            navigatorModule,
-        )
+        modules(coreModules)
     }
     hasStartedKoin = true
 }

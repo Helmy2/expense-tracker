@@ -5,6 +5,8 @@ plugins {
 }
 
 dependencies {
+    commonMainApi(projects.feature.budget.data)
+    commonMainApi(projects.feature.budget.domain)
     commonMainApi(projects.feature.expense.data)
     commonMainApi(projects.feature.expense.domain)
     commonMainApi(projects.shared.core.data)
@@ -22,6 +24,8 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "SharedCore"
             isStatic = true
+            export(projects.feature.budget.data)
+            export(projects.feature.budget.domain)
             export(projects.feature.expense.data)
             export(projects.feature.expense.domain)
             export(projects.shared.core.data)

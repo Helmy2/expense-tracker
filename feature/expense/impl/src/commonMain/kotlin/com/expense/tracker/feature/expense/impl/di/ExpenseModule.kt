@@ -1,5 +1,6 @@
 package com.expense.tracker.feature.expense.impl.di
 
+import com.expense.tracker.feature.budget.api.navigation.BudgetRoute
 import com.expense.tracker.feature.expense.api.navigation.ExpenseRoute
 import com.expense.tracker.feature.expense.impl.ExpenseScreen
 import com.expense.tracker.feature.expense.impl.ExpenseViewModel
@@ -18,6 +19,7 @@ val expenseUiModule = module {
         val navigator = koinInject<Navigator>()
         ExpenseScreen(
             onNavigateBack = { navigator.goBack() },
+            onNavigateToBudgets = { navigator.goTo(BudgetRoute) },
         )
     }
 }

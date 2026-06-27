@@ -1,0 +1,195 @@
+feature: budget
+goal: >
+  Users can set monthly spending limits per category. The budgets screen shows
+  a list of budgets, each displaying the category name, how much has been
+  spent so far, the total limit, and a progress bar. Budget bars are
+  color-coded: green when under 75% spent, yellow between 75% and 90%, and
+  red when over 90%. Tapping a budget shows a detail view with the category,
+  remaining amount, and the transactions contributing to it. Users can create,
+  edit, and delete budgets. A budget form lets them pick a category (from the
+  existing expense categories) and set a monthly limit. Budgets reset
+  automatically each calendar month -- the current month's spending is
+  compared against the limit. The budgets screen is accessible from the main
+  expense screen via a "Budgets" button. Adding or editing a transaction
+  should update the budget spent amounts in real time. Show a warning
+  indicator when a category is over budget.
+
+timeSensitiveBehavior:
+  usesTimeProvider: true
+  details: >
+    Budgets are compared against the current calendar month. Use
+    TimeProvider.currentYearMonth() for period filtering. The spent amount
+    is calculated by summing EXPENSE transactions in the current month for
+    each category. Use TimeProvider.nowMillis() for creation timestamps.
+
+entities:
+  - name: Budget
+    fields:
+      - name: id
+        type: String
+        description: Unique identifier
+      - name: category
+        type: TransactionCategory
+        description: >
+          The expense category this budget tracks. Reuses the existing
+          TransactionCategory enum from feature/expense/domain.
+      - name: monthlyLimit
+        type: Double
+        description: The spending limit for this category per month
+      - name: createdAtMillis
+        type: Long
+        description: When the budget was created
+      - name: updatedAtMillis
+        type: Long
+        description: When the budget was last updated
+    notes: >
+      A budget is uniquely identified by its category. Each category can have
+      at most one budget. The monthly limit applies to the current calendar
+      month.
+
+  - name: BudgetWithSpending
+    fields:
+      - name: budget
+        type: Budget
+        description: The budget definition
+      - name: spentAmount
+        type: Double
+        description: >
+          Total amount spent in this category during the current calendar month
+      - name: remainingAmount
+        type: Double
+        description: monthlyLimit - spentAmount (can be negative when over budget)
+      - name: percentage
+        type: Double
+        description: spentAmount / monthlyLimit as a percentage (0.0 - 1.0+)
+      - name: status
+        type: BudgetStatus
+        description: Color-coded status based on percentage thresholds
+    notes: >
+      This is a computed/read-only model. Not persisted directly. Derived from
+      Budget + current month's Transaction list.
+
+  - name: BudgetStatus
+    type: enum
+    values:
+      - UNDER_75: "Percentage < 0.75 — green"
+      - BETWEEN_75_90: "0.75 <= percentage < 0.90 — yellow"
+      - OVER_90: "percentage >= 0.90 — red"
+      - OVER_BUDGET: "percentage > 1.0 — red, over-budget warning"
+
+actions:
+  - name: LoadBudgets
+    description: Load all budgets with current month spending
+    inputs: none
+    outputs: List<BudgetWithSpending>
+
+  - name: CreateBudget
+    description: Create a new budget for a category
+    inputs:
+      - category: TransactionCategory
+      - monthlyLimit: Double
+    outputs: Budget
+
+  - name: UpdateBudget
+    description: Update a budget's monthly limit
+    inputs:
+      - id: String
+      - monthlyLimit: Double
+    outputs: Budget
+
+  - name: DeleteBudget
+    description: Delete a budget
+    inputs:
+      - id: String
+    outputs: Unit
+
+  - name: LoadBudgetDetail
+    description: Load budget detail with contributing transactions
+    inputs:
+      - budgetId: String
+    outputs: BudgetDetail
+
+screens:
+  - name: BudgetList
+    description: >
+      Main budgets screen showing list of budgets with category name, spent
+      amount, total limit, and color-coded progress bar. Shows over-budget
+      warning indicator. Accessible from main expense screen via "Budgets"
+      button. Has a FAB or button to add a new budget.
+    states:
+      - Loading: Initial loading state
+      - Empty: No budgets configured yet
+      - Content: List of BudgetWithSpending items
+      - Error: Error loading budgets
+
+  - name: BudgetDetail
+    description: >
+      Detail view for a single budget. Shows category, limit, spent, remaining
+      amount, and list of transactions that contribute to this month's spending.
+    states:
+      - Loading: Initial loading state
+      - Content: Budget detail with contributing transactions
+      - Error: Error loading detail
+
+  - name: BudgetForm
+    description: >
+      Form for creating or editing a budget. Pick a category (from existing
+      expense categories, excluding categories that already have a budget when
+      creating) and set a monthly limit amount.
+    states:
+      - Create: Empty form for new budget, category picker + limit input
+      - Edit: Pre-filled form for existing budget, limit input
+
+designExpectations:
+  - useDesignSystemComponents: true
+  - progressBars: >
+      Use a LinearProgressIndicator or equivalent design-system component.
+      Color-code: green (under 75%), yellow (75%-90%), red (over 90% or
+      over budget).
+  - overBudgetWarning: >
+      Show a warning icon or badge when a category is over budget
+      (percentage > 1.0).
+  - emptyState: >
+      When no budgets exist, show an empty state card encouraging the user
+      to create their first budget.
+  - formLayout: >
+      Compact single-column form. Category picker as dropdown or segmented
+      control. Monthly limit as decimal number input. Primary save action
+      close to the limit input field.
+  - listLayout: >
+      Each budget item shows: category name (leading), spent/limit text
+      (supporting), progress bar (full width below), and an optional warning
+      icon when over budget.
+  - navigation: >
+      "Budgets" button on the main expense screen top bar or as a list item
+      that navigates to the budgets screen.
+
+requiredTests:
+  domain:
+    - Budget model construction and field validation
+    - BudgetWithSpending computation (percentage, remaining, status)
+    - BudgetStatus enum thresholds (UNDER_75, BETWEEN_75_90, OVER_90, OVER_BUDGET)
+    - Repository contract tests (load, create, update, delete)
+
+  data:
+    - BudgetEntity to/from Budget domain mapping
+    - BudgetDao operations (getAll, getByCategory, insert, update, delete)
+    - RoomBudgetRepository implementation tests
+    - Spending calculation logic (sum of EXPENSE transactions in current month)
+
+  presentation:
+    - BudgetViewModel loading states (Loading, Empty, Content, Error)
+    - BudgetViewModel create, edit, delete actions
+    - BudgetDetailViewModel loading and displaying transactions
+    - BudgetFormViewModel validation and save
+
+crossFeatureReuse:
+  - module: feature/expense/domain
+    reason: >
+      Reuses TransactionCategory enum and TransactionRepository to calculate
+      per-category spending. The budget feature's data layer will depend on
+      the expense feature's domain for TransactionCategory and
+      TransactionRepository. This is a documented temporary exception for MVP.
+      The TransactionCategory enum is shared across features and could
+      eventually move to a shared domain module.
+    tracked: true

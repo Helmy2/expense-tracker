@@ -2,6 +2,12 @@ package com.expense.tracker.shared.di
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import com.expense.tracker.feature.budget.data.local.BudgetDao
+import com.expense.tracker.feature.budget.data.local.BudgetDatabase
+import com.expense.tracker.feature.budget.data.local.BudgetDatabaseFactory
+import com.expense.tracker.feature.budget.data.local.createBudgetDatabase
+import com.expense.tracker.feature.budget.data.repository.RoomBudgetRepository
+import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
 import com.expense.tracker.feature.expense.data.local.TransactionDao
 import com.expense.tracker.feature.expense.data.local.TransactionDatabase
 import com.expense.tracker.feature.expense.data.local.TransactionDatabaseFactory
@@ -35,4 +41,12 @@ fun expenseDataModule(
             baseUrl = null,
         )
     }
+}
+
+fun budgetDataModule(
+    budgetDatabaseFactory: BudgetDatabaseFactory,
+) = module {
+    single<BudgetDatabase> { createBudgetDatabase(budgetDatabaseFactory) }
+    single<BudgetDao> { get<BudgetDatabase>().budgetDao() }
+    singleOf(::RoomBudgetRepository).bind<BudgetRepository>()
 }

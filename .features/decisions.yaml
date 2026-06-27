@@ -6,3 +6,14 @@ sampleStarterData:
   persistence: room
   seedContent: stable resource keys stored in data and resolved by presentation shared string resources
   userEnteredContent: raw create/update text persisted locally
+
+crossFeatureReuse:
+  - feature: budget
+    reuse:
+      - module: feature/expense/domain
+        reason: >
+          Budget feature reuses TransactionCategory enum and TransactionRepository
+          from expense domain to calculate per-category spending. This is a
+          temporary exception for MVP — TransactionCategory could move to a shared
+          domain module when ownership is equal.
+        tracked: true

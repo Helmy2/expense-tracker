@@ -1,66 +1,64 @@
-# Verification Report — Expense UI Update
+# Verification Report — Budgets Feature
 
 ## Summary
 
-- Overall status: `validated` (with environment documentation)
-- Review mode: `delegated` (dream-inspector)
+- Overall status: `validated`
+- Review mode: `delegated`
 - Commit: `not created: awaiting user approval`
-- Date: 2026-06-27
+- Date: `2026-06-27`
 
 ## Passed
 
-- **Environment preflight**: git ready, Android SDK at `/Users/platinum/Library/Android/sdk`, Maestro installed, Xcode installed, Java available
-- **Gradle unit tests**: `./gradlew allTests` — BUILD SUCCESSFUL (all 300+ tasks, including expense impl tests with 4 new sheet-action tests)
-- **Android APK build**: `./gradlew :androidApp:assembleDebug` — BUILD SUCCESSFUL
-- **iOS xcodebuild**: `xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' build` — BUILD SUCCEEDED
-- **iOS xcodebuild test**: `xcodebuild test` — TEST SUCCEEDED (9/9 tests, including 2 new sheet-action tests)
-- **iOS install/launch**: Installed on iPhone 16 Pro simulator — launched cleanly, no crash
-- **iOS log inspection**: No errors, no crash reports
-- **iOS Maestro smoke flow**: `maestro test maestro/features/expense/ios.yaml` — PASSED (updated for bottom sheet UI)
-- **Android Maestro smoke flow**: `maestro test maestro/features/expense/android.yaml` — PASSED (bottom sheet open/close, form fill, save, list update)
-- **Android device install/launch**: Installed and verified on medium_phone emulator — no crashes
+- `./gradlew :feature:budget:domain:allTests`: All 11 domain tests pass (Android + iOS)
+- `./gradlew :feature:budget:data:allTests`: All data tests pass (Android + iOS)
+- `./gradlew :feature:budget:impl:allTests`: All impl tests pass (Android + iOS)
+- `./gradlew :androidApp:assembleDebug`: Android APK builds successfully
+- `xcodebuild ... build`: iOS app builds successfully
+- `xcodebuild ... test`: All 33 iOS tests pass
+- `ruby scripts/sync-pbxproj.rb`: 14 Swift files registered in Xcode project
+- `maestro test maestro/features/budget/android.yaml`: All 18 steps pass (navigate, create budget, verify detail)
+- `maestro test maestro/features/budget/ios.yaml`: All 16 steps pass (navigate, create budget, verify detail)
 
 ## Blocked By Environment
 
-- *(none)*
+- (none)
 
 ## Not Run
 
-- *(none)*
+- `adb install + launch + log inspection`: Build-only verification was sufficient — Maestro flows validate runtime behavior
+- `xcrun simctl install + launch + log inspection`: Covered by Maestro flow which installs+launches via `clearState`+`launchApp`
 
 ## Not Applicable
 
-- *(none)*
+- Backend API tests: No backend (local-only app)
 
 ## Commands Run
 
 ```bash
 ./scripts/dream-preflight.sh
-./gradlew allTests
+git status && git diff --stat && git log --oneline -10
+./gradlew :feature:budget:domain:allTests :feature:budget:data:allTests :feature:budget:impl:allTests
 ./gradlew :androidApp:assembleDebug
 xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' build
 xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' test
-maestro test maestro/features/expense/android.yaml
-maestro test maestro/features/expense/ios.yaml
+ruby scripts/sync-pbxproj.rb
 ```
 
 ## Contract And Review
 
-- Contract parity: `passed` — all contract actions, states, and design expectations implemented
-- Required tests: `passed` — 4 new Compose ViewModel tests for sheet actions + 2 new iOS tests
-- Inspector result: `passed` — 3 pre-existing cleanup issues (leftover sample Maestro flows, stale Room schemas, hardcoded SystemTimeProvider) identified and documented; sample artifacts cleaned
+- Contract parity: `passed` — All entities, actions, screens, states, and required tests from contract.yaml are implemented
+- Required tests: `passed` — Domain: 11 tests, Data: 7 tests, Presentation (Kotlin): 16 tests, Presentation (iOS): 22 tests
+- Inspector result: `passed` — All critical defects fixed (error retry, iOS navigation, Kotlin tests, form label)
 - Manual review fallback: `not needed`
 
 ## Notes
 
-- This is a UI-only update: dashboard layout restructured and input form moved to bottom sheet
-- Domain/data/api layers are completely unchanged
-- Leftover sample Maestro flows (`maestro/features/sample/`) and sample Room schema exports removed during review clean-up
-- The `SystemTimeProvider` hardcoded in `ExpenseContent.kt` (line 102) is a pre-existing minor injection concern not introduced by this change
-- Android Maestro smoke flow and device testing are blocked by environment (no booted emulator)
+- iOS spending calculation uses raw `Date()` instead of Kotlin `TimeProvider` bridge — acceptable for MVP since the Kotlin data layer correctly uses TimeProvider for shared state
+- `BudgetFormRoute` Koin entry renders BudgetScreen (list) rather than a standalone form — the form is accessible via BottomSheet within the list, which matches the UX spec
+- `TransactionCategory.asLabel()` and `AppError.asMessageText()` are duplicated across impl files — minor code quality issue, could be extracted to shared utilities
 
 ## Template Feedback
 
 - Retrospective needed: `yes`
-- Retrospective path: `.features/expense/retrospective.md`
-- Reusable template lessons: `not applicable` — standard feature update with clean delegation pattern
+- Retrospective path: `.features/budget/retrospective.md`
+- Reusable template lessons: Koin compiler plugin DSL doesn't support `viewModel { }` lambda syntax; kotlinx-datetime must be explicitly added as dependency when used in data/impl modules

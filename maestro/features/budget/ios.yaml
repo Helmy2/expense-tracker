@@ -1,0 +1,29 @@
+appId: com.expense.tracker.ios
+---
+- clearState
+- launchApp
+- assertVisible: "Expense Tracker"
+# Navigate to budgets screen via the Budgets toolbar button
+- tapOn: "Budgets"
+- assertVisible: "Budgets"
+- assertVisible: "No budgets yet"
+# Tap the plus button to create a new budget
+- tapOn:
+    id: "plus"
+- assertVisible: "New Budget"
+# Select a category - tap the picker to open it
+- tapOn: "Other"
+- tapOn: "Food"
+# Enter a monthly limit
+- tapOn: "Enter amount"
+- inputText: "500.00"
+- pressKey: Enter
+# Save the budget
+- tapOn: "Save"
+# Verify the budget appears in the list
+- assertVisible: "Food"
+- assertVisible: ".*500\\.00.*"
+# Tap the budget card to view detail
+- tapOn: "Food"
+- assertVisible: "Spent"
+- assertVisible: "Remaining"

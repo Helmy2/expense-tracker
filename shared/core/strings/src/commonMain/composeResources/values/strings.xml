@@ -37,4 +37,33 @@
     <string name="expense_dashboard_label">Dashboard</string>
     <string name="expense_type_label">Type</string>
     <string name="expense_saved_snackbar">Transaction saved</string>
+    <string name="expense_budgets_button">Budgets</string>
+
+    <!-- Budget feature -->
+    <string name="budget_list_title">Budgets</string>
+    <string name="budget_empty_title">No budgets yet</string>
+    <string name="budget_empty_body">Create your first budget to start tracking spending limits by category.</string>
+    <string name="budget_error_title">Something went wrong</string>
+    <string name="budget_error_body">Could not load your budgets.</string>
+    <string name="budget_retry">Retry</string>
+    <string name="budget_spent_label">Spent</string>
+    <string name="budget_remaining_label">Remaining</string>
+    <string name="budget_transactions_title">Transactions this month</string>
+    <string name="budget_no_transactions_title">No transactions yet</string>
+    <string name="budget_no_transactions_body">No expense transactions for this category this month.</string>
+    <string name="budget_form_create_title">New Budget</string>
+    <string name="budget_form_edit_title">Edit Budget</string>
+    <string name="budget_category_label">Category</string>
+    <string name="budget_limit_label">Monthly Limit</string>
+    <string name="budget_limit_placeholder">Enter amount</string>
+    <string name="budget_limit_validation">Please enter a valid amount greater than zero</string>
+    <string name="budget_save">Save</string>
+    <string name="budget_delete_title">Delete Budget</string>
+    <string name="budget_delete_body">Are you sure you want to delete this budget? This cannot be undone.</string>
+    <string name="budget_delete_confirm">Delete</string>
+    <string name="budget_delete_dismiss">Cancel</string>
+    <string name="budget_created_snackbar">Budget created</string>
+    <string name="budget_updated_snackbar">Budget updated</string>
+    <string name="budget_deleted_snackbar">Budget deleted</string>
+    <string name="budget_over_budget_warning">Over budget! You\'ve exceeded your monthly limit for this category.</string>
 </resources>

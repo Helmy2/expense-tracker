@@ -1,0 +1,31 @@
+appId: com.expense.tracker.android
+---
+- clearState
+- launchApp
+- assertVisible: "Expense Tracker"
+# Navigate to budgets screen via the Budgets button in the top bar
+- tapOn: "Budgets"
+- assertVisible: "Budgets"
+- assertVisible: "No budgets yet"
+# Tap FAB to create a new budget (bottom-right area)
+- tapOn:
+    point: "90%,90%"
+- waitForAnimationToEnd
+- assertVisible: "New Budget"
+- waitForAnimationToEnd
+# Open the category dropdown by tapping the category field area
+- tapOn:
+    point: "50%,35%"
+- tapOn: "Food"
+# Enter a monthly limit
+- tapOn: "Enter amount"
+- inputText: "500.00"
+- pressKey: Back
+# Save the budget
+- tapOn: "Save"
+# Verify the budget appears in the list
+- assertVisible: "Food"
+# Tap the budget card to view detail
+- tapOn: "Food"
+- assertVisible: "Spent"
+- assertVisible: "Remaining"

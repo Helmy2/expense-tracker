@@ -33,6 +33,13 @@ struct ExpenseListView: View {
             }
             .navigationTitle("expense_title")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    NavigationLink {
+                        BudgetListView()
+                    } label: {
+                        Text("budget_list_title")
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         viewModel.showFormSheet = true
