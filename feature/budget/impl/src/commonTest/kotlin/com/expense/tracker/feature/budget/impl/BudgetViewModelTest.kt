@@ -2,14 +2,12 @@ package com.expense.tracker.feature.budget.impl
 
 import app.cash.turbine.test
 import com.expense.tracker.feature.budget.domain.model.Budget
+import com.expense.tracker.feature.budget.domain.model.BudgetDetail
 import com.expense.tracker.feature.budget.domain.model.BudgetStatus
 import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
 import com.expense.tracker.feature.budget.domain.model.withSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
-import com.expense.tracker.feature.expense.domain.model.Transaction
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
-import com.expense.tracker.feature.expense.domain.model.TransactionType
-import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.testing.FakeTimeProvider
@@ -47,10 +45,8 @@ class BudgetViewModelTest {
     @Test
     fun startsInLoadingState() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = emptyList())
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -59,11 +55,12 @@ class BudgetViewModelTest {
 
     @Test
     fun loadWithEmptyListTransitionsToEmpty() = runTest(mainDispatcher) {
-        val budgetRepo = fakeBudgetRepository(budgets = emptyList())
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
+        val budgetRepo = fakeBudgetRepository(
+            budgets = emptyList(),
+            budgetsWithSpendingToReturn = emptyList(),
+        )
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -75,12 +72,13 @@ class BudgetViewModelTest {
 
     @Test
     fun loadWithBudgetsTransitionsToContent() = runTest(mainDispatcher) {
-        val budgets = sampleBudgets()
-        val budgetRepo = fakeBudgetRepository(budgets = budgets)
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
+        val budgetsWithSpending = sampleBudgetsWithSpending()
+        val budgetRepo = fakeBudgetRepository(
+            budgets = sampleBudgets(),
+            budgetsWithSpendingToReturn = budgetsWithSpending,
+        )
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -94,12 +92,14 @@ class BudgetViewModelTest {
     @Test
     fun loadWithBudgetsCalculatesSpending() = runTest(mainDispatcher) {
         val budgets = sampleBudgets()
-        val budgetRepo = fakeBudgetRepository(budgets = budgets)
-        val transactions = sampleTransactions()
-        val transactionRepo = fakeTransactionRepository(transactions = transactions)
+        val foodBudget = budgets[0].withSpending(45.0)
+        val transportBudget = budgets[1].withSpending(0.0)
+        val budgetRepo = fakeBudgetRepository(
+            budgets = budgets,
+            budgetsWithSpendingToReturn = listOf(foodBudget, transportBudget),
+        )
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -107,9 +107,9 @@ class BudgetViewModelTest {
         advanceUntilIdle()
 
         val contentState = assertIs<BudgetContentState.Content>(viewModel.state.value.contentState)
-        val foodBudget = contentState.budgets.find { it.budget.category == TransactionCategory.FOOD }
-        assertTrue(foodBudget != null)
-        assertEquals(45.0, foodBudget.spentAmount)
+        val foodEntry = contentState.budgets.find { it.budget.category == TransactionCategory.FOOD }
+        assertTrue(foodEntry != null)
+        assertEquals(45.0, foodEntry.spentAmount)
     }
 
     @Test
@@ -121,14 +121,13 @@ class BudgetViewModelTest {
             createdAtMillis = 0L,
             updatedAtMillis = 0L,
         )
-        val budgetRepo = fakeBudgetRepository(budgets = listOf(budget))
-        val transactions = listOf(
-            Transaction("tx-1", 40.0, TransactionType.EXPENSE, TransactionCategory.FOOD, "Lunch", 0L),
+        val bws = budget.withSpending(40.0)
+        val budgetRepo = fakeBudgetRepository(
+            budgets = listOf(budget),
+            budgetsWithSpendingToReturn = listOf(bws),
         )
-        val transactionRepo = fakeTransactionRepository(transactions = transactions)
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -143,10 +142,8 @@ class BudgetViewModelTest {
     @Test
     fun saveBudgetWithValidInputCreatesAndReloads() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = emptyList())
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(current = 5000L),
         )
         viewModel.onAction(BudgetAction.Load)
@@ -166,10 +163,8 @@ class BudgetViewModelTest {
     @Test
     fun saveBudgetEmitsSavedEvent() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = emptyList())
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(current = 5000L),
         )
         viewModel.onAction(BudgetAction.Load)
@@ -189,10 +184,8 @@ class BudgetViewModelTest {
     @Test
     fun saveBudgetWithInvalidLimitDoesNotCallRepository() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = emptyList())
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -207,10 +200,8 @@ class BudgetViewModelTest {
     @Test
     fun saveBudgetWithNegativeLimitDoesNotCallRepository() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = emptyList())
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -225,10 +216,8 @@ class BudgetViewModelTest {
     @Test
     fun saveBudgetWithNonNumericLimitDoesNotCallRepository() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = emptyList())
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -244,10 +233,8 @@ class BudgetViewModelTest {
     fun deleteBudgetRemovesAndReloads() = runTest(mainDispatcher) {
         val budgets = sampleBudgets()
         val budgetRepo = fakeBudgetRepository(budgets = budgets)
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
         viewModel.onAction(BudgetAction.Load)
@@ -264,10 +251,8 @@ class BudgetViewModelTest {
     fun deleteBudgetEmitsDeletedEvent() = runTest(mainDispatcher) {
         val budgets = sampleBudgets()
         val budgetRepo = fakeBudgetRepository(budgets = budgets)
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
         viewModel.onAction(BudgetAction.Load)
@@ -286,10 +271,8 @@ class BudgetViewModelTest {
     fun cancelDeleteDoesNotCallRepository() = runTest(mainDispatcher) {
         val budgets = sampleBudgets()
         val budgetRepo = fakeBudgetRepository(budgets = budgets)
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
         viewModel.onAction(BudgetAction.Load)
@@ -306,7 +289,6 @@ class BudgetViewModelTest {
     fun categorySelectionUpdatesStateAndClosesMenu() = runTest(mainDispatcher) {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
-            transactionRepository = fakeTransactionRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
         )
 
@@ -324,7 +306,6 @@ class BudgetViewModelTest {
     fun limitChangedUpdatesState() = runTest(mainDispatcher) {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
-            transactionRepository = fakeTransactionRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
         )
 
@@ -337,7 +318,6 @@ class BudgetViewModelTest {
     fun startCreateSetsFormState() = runTest(mainDispatcher) {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
-            transactionRepository = fakeTransactionRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
         )
 
@@ -353,7 +333,6 @@ class BudgetViewModelTest {
     fun startEditSetsFormState() = runTest(mainDispatcher) {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
-            transactionRepository = fakeTransactionRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
         )
 
@@ -371,7 +350,6 @@ class BudgetViewModelTest {
     fun dismissFormSheetResetsFormState() = runTest(mainDispatcher) {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
-            transactionRepository = fakeTransactionRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
         )
 
@@ -391,12 +369,10 @@ class BudgetViewModelTest {
     @Test
     fun loadErrorExposesErrorState() = runTest(mainDispatcher) {
         val budgetRepo = mock<BudgetRepository> {
-            everySuspend { loadBudgets() } returns Result.Failure(AppError.Message("Database error"))
+            everySuspend { loadBudgetsWithSpending() } returns Result.Failure(AppError.Message("Database error"))
         }
-        val transactionRepo = fakeTransactionRepository(transactions = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
-            transactionRepository = transactionRepo,
             timeProvider = FakeTimeProvider(),
         )
 
@@ -413,20 +389,24 @@ private fun sampleBudgets(): List<Budget> = listOf(
     Budget("b-2", TransactionCategory.TRANSPORTATION, 50.0, 0L, 0L),
 )
 
-private fun sampleTransactions(): List<Transaction> = listOf(
-    Transaction("tx-1", 45.0, TransactionType.EXPENSE, TransactionCategory.FOOD, "Lunch", 0L),
-    Transaction("tx-2", 100.0, TransactionType.INCOME, TransactionCategory.SALARY, "Paycheck", 0L),
-    Transaction("tx-3", 15.0, TransactionType.EXPENSE, TransactionCategory.TRANSPORTATION, "Bus pass", 0L),
+private fun sampleBudgetsWithSpending(): List<BudgetWithSpending> = sampleBudgets().map {
+    it.withSpending(0.0)
+}
+
+internal fun fakeBudgetRepository(
+    budgets: List<Budget>,
+    budgetsWithSpendingToReturn: List<BudgetWithSpending>? = null,
+    budgetDetailToReturn: BudgetDetail? = null,
+): FakeBudgetRepository = FakeBudgetRepository(
+    initialBudgets = budgets,
+    budgetsWithSpendingToReturn = budgetsWithSpendingToReturn,
+    budgetDetailToReturn = budgetDetailToReturn,
 )
-
-internal fun fakeBudgetRepository(budgets: List<Budget>): FakeBudgetRepository =
-    FakeBudgetRepository(budgets)
-
-internal fun fakeTransactionRepository(transactions: List<Transaction>): FakeTransactionRepository =
-    FakeTransactionRepository(transactions)
 
 internal class FakeBudgetRepository(
     initialBudgets: List<Budget>,
+    private val budgetsWithSpendingToReturn: List<BudgetWithSpending>? = null,
+    private val budgetDetailToReturn: BudgetDetail? = null,
 ) : BudgetRepository {
     private val budgets = initialBudgets.toMutableList()
     var createCount = 0
@@ -475,36 +455,23 @@ internal class FakeBudgetRepository(
         budgets.removeAll { it.id == id }
         return Result.Success(Unit)
     }
-}
 
-internal class FakeTransactionRepository(
-    initialTransactions: List<Transaction>,
-) : TransactionRepository {
-    private val transactions = initialTransactions.toMutableList()
-
-    override suspend fun loadTransactions(): Result<List<Transaction>> =
-        Result.Success(transactions.toList())
-
-    override suspend fun addTransaction(
-        amount: Double,
-        type: TransactionType,
-        category: TransactionCategory,
-        note: String,
-    ): Result<Transaction> {
-        val transaction = Transaction(
-            id = "new-${transactions.size}",
-            amount = amount,
-            type = type,
-            category = category,
-            note = note,
-            createdAtMillis = 0L,
-        )
-        transactions.add(transaction)
-        return Result.Success(transaction)
+    override suspend fun loadBudgetsWithSpending(): Result<List<BudgetWithSpending>> {
+        val payload = budgetsWithSpendingToReturn
+            ?: budgets.map { it.withSpending(0.0) }
+        return Result.Success(payload)
     }
 
-    override suspend fun deleteTransaction(id: String): Result<Unit> {
-        transactions.removeAll { it.id == id }
-        return Result.Success(Unit)
+    override suspend fun loadBudgetDetail(id: String): Result<BudgetDetail?> {
+        val explicit = budgetDetailToReturn
+        if (explicit != null) return Result.Success(explicit)
+        val budget = budgets.find { it.id == id }
+            ?: return Result.Success(null)
+        return Result.Success(
+            BudgetDetail(
+                budgetWithSpending = budget.withSpending(0.0),
+                transactions = emptyList(),
+            ),
+        )
     }
 }

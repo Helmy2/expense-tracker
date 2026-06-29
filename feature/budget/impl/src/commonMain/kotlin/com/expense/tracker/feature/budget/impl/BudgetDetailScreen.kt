@@ -43,15 +43,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.expense.tracker.feature.budget.domain.model.BudgetDetail
 import com.expense.tracker.feature.budget.domain.model.BudgetStatus
-import com.expense.tracker.feature.budget.domain.model.withSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
-import com.expense.tracker.feature.expense.domain.model.TransactionType
-import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.SystemTimeProvider
 import com.expense.tracker.shared.core.domain.TimeProvider
-import com.expense.tracker.shared.core.domain.YearMonth
 import com.expense.tracker.shared.core.presentation.MviViewModel
 import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.budget_delete_body
@@ -78,8 +74,6 @@ import com.expense.tracker.shared.designsystem.components.Dialog
 import com.expense.tracker.shared.designsystem.components.IconButton
 import com.expense.tracker.shared.designsystem.components.ListItem
 import com.expense.tracker.shared.designsystem.components.TopAppBar
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -92,7 +86,6 @@ private val BudgetRed = Color(0xFFEF5350)
 
 class BudgetDetailViewModel(
     private val budgetRepository: BudgetRepository,
-    private val transactionRepository: TransactionRepository,
     private val timeProvider: TimeProvider,
 ) : MviViewModel<BudgetDetailState, BudgetDetailAction, BudgetDetailEvent>(
     initialState = BudgetDetailState(),
@@ -112,47 +105,17 @@ class BudgetDetailViewModel(
     private suspend fun load() {
         updateState { it.copy(contentState = BudgetDetailContentState.Loading) }
 
-        when (val result = budgetRepository.loadBudgetById(budgetId)) {
+        when (val result = budgetRepository.loadBudgetDetail(budgetId)) {
             is Result.Success -> {
-                val budget = result.value
-                if (budget == null) {
+                val detail = result.value
+                if (detail == null) {
                     updateState {
                         it.copy(contentState = BudgetDetailContentState.Error(AppError.Unknown))
                     }
-                    return
-                }
-
-                val transactions = when (val txResult = transactionRepository.loadTransactions()) {
-                    is Result.Success -> txResult.value
-                    is Result.Failure -> emptyList()
-                }
-
-                val yearMonth = timeProvider.currentYearMonth()
-                val filteredTransactions = transactions
-                    .filter { it.type == TransactionType.EXPENSE }
-                    .filter { it.category == budget.category }
-                    .filter {
-                        val localDateTime = Instant.fromEpochMilliseconds(it.createdAtMillis)
-                            .toLocalDateTime(timeProvider.timeZone())
-                        val txYearMonth = YearMonth(
-                            year = localDateTime.year,
-                            month = localDateTime.monthNumber,
-                        )
-                        txYearMonth == yearMonth
+                } else {
+                    updateState {
+                        it.copy(contentState = BudgetDetailContentState.Content(detail))
                     }
-
-                val spent = filteredTransactions.sumOf { it.amount }
-                val budgetWithSpending = budget.withSpending(spent)
-
-                updateState {
-                    it.copy(
-                        contentState = BudgetDetailContentState.Content(
-                            BudgetDetail(
-                                budgetWithSpending = budgetWithSpending,
-                                transactions = filteredTransactions,
-                            ),
-                        ),
-                    )
                 }
             }
             is Result.Failure -> updateState {

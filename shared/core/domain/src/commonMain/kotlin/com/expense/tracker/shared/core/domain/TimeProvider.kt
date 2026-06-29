@@ -1,7 +1,9 @@
 package com.expense.tracker.shared.core.domain
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -14,6 +16,22 @@ interface TimeProvider {
     fun today(): LocalDate = localDateTime(nowMillis()).date
 
     fun currentYearMonth(): YearMonth = today().toYearMonth()
+
+    fun yearMonthRangeMillis(yearMonth: YearMonth): LongRange {
+        val zone = timeZone()
+        val start = LocalDateTime(yearMonth.year, yearMonth.month, 1, 0, 0)
+            .toInstant(zone)
+            .toEpochMilliseconds()
+        val (nextYear, nextMonth) = if (yearMonth.month == 12) {
+            yearMonth.year + 1 to 1
+        } else {
+            yearMonth.year to (yearMonth.month + 1)
+        }
+        val endExclusive = LocalDateTime(nextYear, nextMonth, 1, 0, 0)
+            .toInstant(zone)
+            .toEpochMilliseconds()
+        return start until endExclusive
+    }
 
     fun formatDate(
         millis: Long,

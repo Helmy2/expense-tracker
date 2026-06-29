@@ -5,9 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.expense.tracker.feature.budget.data.local.AndroidBudgetDatabaseFactory
-import com.expense.tracker.feature.expense.data.local.AndroidTransactionDatabaseFactory
 import com.expense.tracker.shared.app.DreamApp
+import com.expense.tracker.shared.core.data.database.AndroidAppDatabaseFactory
 import com.expense.tracker.shared.di.initKoin
 
 class MainActivity : ComponentActivity() {
@@ -15,8 +14,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         initKoin(
-            transactionDatabaseFactory = AndroidTransactionDatabaseFactory(applicationContext),
-            budgetDatabaseFactory = AndroidBudgetDatabaseFactory(applicationContext),
+            databaseFactory = AndroidAppDatabaseFactory(applicationContext),
             appContext = applicationContext,
         )
         enableEdgeToEdge()

@@ -1,25 +1,24 @@
 package com.expense.tracker.feature.budget.data.repository
 
-import com.expense.tracker.feature.budget.data.local.BudgetDao
 import com.expense.tracker.feature.budget.data.mapper.toDomain
 import com.expense.tracker.feature.budget.data.mapper.toEntity
 import com.expense.tracker.feature.budget.domain.model.Budget
+import com.expense.tracker.feature.budget.domain.model.BudgetDetail
+import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
+import com.expense.tracker.feature.budget.domain.model.withSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
-import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
+import com.expense.tracker.shared.core.data.dao.BudgetDao
+import com.expense.tracker.shared.core.data.dao.TransactionDao
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.TimeProvider
-import com.expense.tracker.shared.core.domain.YearMonth
 import com.expense.tracker.shared.core.domain.runSuspendCatching
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 class RoomBudgetRepository(
     private val budgetDao: BudgetDao,
-    private val transactionRepository: TransactionRepository,
+    private val transactionDao: TransactionDao,
     private val timeProvider: TimeProvider,
 ) : BudgetRepository {
 
@@ -87,29 +86,53 @@ class RoomBudgetRepository(
         onFailure = { AppError.Unknown },
     )
 
-    suspend fun calculateSpending(category: TransactionCategory): Result<Double> = runSuspendCatching(
+    override suspend fun loadBudgetsWithSpending(): Result<List<BudgetWithSpending>> = runSuspendCatching(
         block = {
-            val yearMonth = timeProvider.currentYearMonth()
-            val transactions = transactionRepository.loadTransactions()
-            when (transactions) {
-                is Result.Success -> transactions.value
-                    .filter { it.type == TransactionType.EXPENSE }
-                    .filter { it.category == category }
-                    .filter {
-                        val localDateTime = Instant.fromEpochMilliseconds(it.createdAtMillis)
-                            .toLocalDateTime(timeProvider.timeZone())
-                        val txYearMonth = YearMonth(
-                            year = localDateTime.year,
-                            month = localDateTime.monthNumber,
-                        )
-                        txYearMonth == yearMonth
-                    }
-                    .sumOf { it.amount }
-                is Result.Failure -> 0.0
+            val budgets = budgetDao.getAll().map { it.toDomain() }
+            val range = timeProvider.yearMonthRangeMillis(timeProvider.currentYearMonth())
+            budgets.map { budget ->
+                val spent = transactionDao.sumExpenseForCategory(
+                    category = budget.category.name,
+                    startMillis = range.first,
+                    endMillis = range.last + 1,
+                )
+                budget.withSpending(spent)
             }
         },
         onFailure = { AppError.Unknown },
     )
+
+    override suspend fun loadBudgetDetail(id: String): Result<BudgetDetail?> = runSuspendCatching(
+        block = {
+            val entity = budgetDao.getById(id)
+            if (entity == null) {
+                null
+            } else {
+                buildBudgetDetail(entity.toDomain())
+            }
+        },
+        onFailure = { AppError.Unknown },
+    )
+
+    private suspend fun buildBudgetDetail(budget: Budget): BudgetDetail {
+        val range = timeProvider.yearMonthRangeMillis(timeProvider.currentYearMonth())
+        val spent = transactionDao.sumExpenseForCategory(
+            category = budget.category.name,
+            startMillis = range.first,
+            endMillis = range.last + 1,
+        )
+        val budgetWithSpending = budget.withSpending(spent)
+        val transactions = transactionDao.getAll()
+            .filter { it.type == TransactionType.EXPENSE.name }
+            .filter { it.category == budget.category.name }
+            .filter { it.createdAtMillis in range }
+            .sortedByDescending { it.createdAtMillis }
+            .map { it.toDomain() }
+        return BudgetDetail(
+            budgetWithSpending = budgetWithSpending,
+            transactions = transactions,
+        )
+    }
 
     private fun generateId(): String = "${timeProvider.nowMillis()}-${kotlin.random.Random.nextLong()}"
 }

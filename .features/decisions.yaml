@@ -7,13 +7,50 @@ sampleStarterData:
   seedContent: stable resource keys stored in data and resolved by presentation shared string resources
   userEnteredContent: raw create/update text persisted locally
 
+# Storage architecture decision — 2026-06-29
+#
+# The Dream default pattern is ONE shared Room database in `shared/core/data`
+# (see `.opencode/knowledge-graph/best-practices/11-offline-first-storage-practices.md`
+# §11.2). The previous setup of two per-feature databases (`expense_tracker.db`
+# and `budget_tracker.db`) was an undocumented exception, and the two
+# `feature/*/data` modules were forced to cooperate by injecting
+# `TransactionRepository` into `RoomBudgetRepository`.
+#
+# After this consolidation there is one shared `AppDatabase` in
+# `shared/core/data` with two tables (`transactions` and `budgets`). Cross-
+# feature reads happen via a SQL `SUM(...)` aggregate on the unified database
+# inside `RoomBudgetRepository`. The `feature/budget/impl` layer no longer
+# depends on `TransactionRepository` — it consumes
+# `BudgetRepository.loadBudgetsWithSpending()` /
+# `loadBudgetDetail(id)` instead. The `TransactionCategory` enum is the only
+# remaining cross-feature domain reuse, and it is acceptable per §32.2
+# ("domain-only reuse is safer than impl reuse") because it is a value object
+# with no behavior.
+storage:
+  strategy: shared-room-database
+  owner: shared/core/data
+  tables:
+    - name: transactions
+      owner: feature/expense
+    - name: budgets
+      owner: feature/budget
+  crossFeatureRead:
+    mechanism: sql-aggregate
+    query: >
+      RoomBudgetRepository calls TransactionDao.sumExpenseForCategory(...)
+      with a [startMillis, endMillis) window derived from
+      TimeProvider.currentYearMonth(). No repository-to-repository
+      cross-feature call remains.
+
 crossFeatureReuse:
   - feature: budget
     reuse:
       - module: feature/expense/domain
         reason: >
-          Budget feature reuses TransactionCategory enum and TransactionRepository
-          from expense domain to calculate per-category spending. This is a
-          temporary exception for MVP — TransactionCategory could move to a shared
-          domain module when ownership is equal.
+          Budget feature reuses the TransactionCategory enum from
+          feature/expense/domain for the category picker and as the
+          discriminator for budget rows. This is a value-object reuse
+          (an enum with no behavior) and is acceptable per
+          §32.2. TransactionCategory is a candidate to move to a
+          shared domain module when a third feature needs it.
         tracked: true

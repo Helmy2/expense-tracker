@@ -17,6 +17,9 @@ final class MockBudgetRepositoryBridge: BudgetRepositoryBridge {
     var lastUpdatedId: String?
     var lastUpdatedLimit: Double?
 
+    var budgetsWithSpendingToReturn: [BudgetWithSpendingData] = []
+    var budgetDetailToReturn: BudgetDetailData? = nil
+
     func loadBudgets() async throws -> [BudgetItem] {
         if let error = loadBudgetsError { throw error }
         return budgetsToReturn
@@ -63,6 +66,16 @@ final class MockBudgetRepositoryBridge: BudgetRepositoryBridge {
         deleteCallCount += 1
         lastDeletedId = id
         if let error = deleteBudgetError { throw error }
+    }
+
+    func loadBudgetsWithSpending() async throws -> [BudgetWithSpendingData] {
+        if let error = loadBudgetsError { throw error }
+        return budgetsWithSpendingToReturn
+    }
+
+    func loadBudgetDetail(id: String) async throws -> BudgetDetailData? {
+        if let error = loadBudgetsError { throw error }
+        return budgetDetailToReturn
     }
 }
 

@@ -14,6 +14,7 @@ dependencies {
     commonMainImplementation(libs.koin.core)
     commonMainImplementation(libs.kotlinx.coroutines.core)
     commonTestImplementation(kotlin("test"))
+    commonTestImplementation(libs.kotlinx.coroutines.test)
 }
 
 kotlin {
@@ -31,5 +32,10 @@ kotlin {
             export(projects.shared.core.data)
             export(projects.shared.core.domain)
         }
+    }
+
+    sourceSets.iosTest.dependencies {
+        implementation(kotlin("test"))
+        implementation(libs.kotlinx.coroutines.test)
     }
 }

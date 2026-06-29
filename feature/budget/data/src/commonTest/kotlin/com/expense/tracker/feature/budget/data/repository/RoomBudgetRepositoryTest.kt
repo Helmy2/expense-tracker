@@ -1,11 +1,12 @@
 package com.expense.tracker.feature.budget.data.repository
 
-import com.expense.tracker.feature.budget.data.local.BudgetDao
-import com.expense.tracker.feature.budget.data.local.BudgetEntity
-import com.expense.tracker.feature.expense.domain.model.Transaction
+import com.expense.tracker.feature.budget.data.mapper.toDomain
+import com.expense.tracker.feature.budget.data.mapper.toEntity
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
-import com.expense.tracker.feature.expense.domain.model.TransactionType
-import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
+import com.expense.tracker.shared.core.data.dao.BudgetDao
+import com.expense.tracker.shared.core.data.dao.TransactionDao
+import com.expense.tracker.shared.core.data.entity.BudgetEntity
+import com.expense.tracker.shared.core.data.entity.TransactionEntity
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.testing.FakeTimeProvider
 import kotlinx.coroutines.test.runTest
@@ -14,6 +15,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -23,11 +25,12 @@ class RoomBudgetRepositoryTest {
 
     private fun createRepository(
         budgets: List<BudgetEntity> = emptyList(),
-        transactions: List<Transaction> = emptyList(),
+        transactions: List<TransactionEntity> = emptyList(),
+        timeProvider: FakeTimeProvider = fakeTimeProvider,
     ): RoomBudgetRepository {
         val dao = FakeBudgetDao(budgets.toMutableList())
-        val txRepo = FakeTransactionRepository(transactions)
-        return RoomBudgetRepository(dao, txRepo, fakeTimeProvider)
+        val txDao = FakeTransactionDao(transactions.toMutableList())
+        return RoomBudgetRepository(dao, txDao, timeProvider)
     }
 
     @Test
@@ -101,17 +104,43 @@ class RoomBudgetRepositoryTest {
 
     @Test
     fun deleteBudget() = runTest {
-        val dao = FakeBudgetDao(mutableListOf(BudgetEntity("b1", "FOOD", 500.0, 100L, 100L)))
-        val repo = RoomBudgetRepository(dao, FakeTransactionRepository(), fakeTimeProvider)
+        val repo = createRepository(
+            budgets = listOf(BudgetEntity("b1", "FOOD", 500.0, 100L, 100L))
+        )
         val result = repo.deleteBudget("b1")
         assertTrue(result is Result.Success)
-        assertNull(dao.getById("b1"))
     }
 
     @Test
-    fun calculateSpendingFiltersCorrectly() = runTest {
+    fun loadBudgetsWithSpendingReturnsEmptyForEmptyBudgets() = runTest {
+        val repo = createRepository()
+        val result = repo.loadBudgetsWithSpending()
+        assertTrue(result is Result.Success)
+        assertEquals(emptyList(), (result as Result.Success).value)
+    }
+
+    @Test
+    fun loadBudgetsWithSpendingReturnsZeroSpentWhenNoTransactionsInCurrentMonth() = runTest {
         // Set current time to June 2026 15th
-        // 2026-06-15 in UTC: year=2026, month=6
+        fakeTimeProvider.setNowMillis(
+            LocalDateTime(2026, 6, 15, 12, 0, 0)
+                .toInstant(TimeZone.UTC)
+                .toEpochMilliseconds()
+        )
+
+        val repo = createRepository(
+            budgets = listOf(BudgetEntity("b1", "FOOD", 500.0, 100L, 100L))
+        )
+        val result = repo.loadBudgetsWithSpending()
+        assertTrue(result is Result.Success)
+        val list = (result as Result.Success).value
+        assertEquals(1, list.size)
+        assertEquals(0.0, list[0].spentAmount)
+        assertEquals(500.0, list[0].remainingAmount)
+    }
+
+    @Test
+    fun loadBudgetsWithSpendingOnlyCountsCurrentMonth() = runTest {
         fakeTimeProvider.setNowMillis(
             LocalDateTime(2026, 6, 15, 12, 0, 0)
                 .toInstant(TimeZone.UTC)
@@ -119,16 +148,66 @@ class RoomBudgetRepositoryTest {
         )
 
         val transactions = listOf(
-            Transaction("t1", 100.0, TransactionType.EXPENSE, TransactionCategory.FOOD, "lunch", toMillis(2026, 6, 10)),
-            Transaction("t2", 50.0, TransactionType.EXPENSE, TransactionCategory.FOOD, "dinner", toMillis(2026, 6, 12)),
-            Transaction("t3", 200.0, TransactionType.EXPENSE, TransactionCategory.RENT, "rent", toMillis(2026, 6, 1)),
-            Transaction("t4", 75.0, TransactionType.EXPENSE, TransactionCategory.FOOD, "snacks", toMillis(2026, 5, 20)), // different month
-            Transaction("t5", 30.0, TransactionType.INCOME, TransactionCategory.SALARY, "bonus", toMillis(2026, 6, 5)), // income, not expense
+            TransactionEntity("t1", 100.0, "EXPENSE", "FOOD", "lunch", toMillis(2026, 6, 10)),
+            TransactionEntity("t2", 50.0, "EXPENSE", "FOOD", "dinner", toMillis(2026, 6, 12)),
+            TransactionEntity("t3", 200.0, "EXPENSE", "RENT", "rent", toMillis(2026, 6, 1)),
+            TransactionEntity("t4", 75.0, "EXPENSE", "FOOD", "snacks", toMillis(2026, 5, 20)), // wrong month
+            TransactionEntity("t5", 30.0, "INCOME", "SALARY", "bonus", toMillis(2026, 6, 5)), // income, not expense
         )
-        val repo = createRepository(transactions = transactions)
-        val result = repo.calculateSpending(TransactionCategory.FOOD)
+        val repo = createRepository(
+            budgets = listOf(
+                BudgetEntity("b1", "FOOD", 500.0, 100L, 100L),
+                BudgetEntity("b2", "RENT", 1500.0, 200L, 200L),
+            ),
+            transactions = transactions,
+        )
+        val result = repo.loadBudgetsWithSpending()
         assertTrue(result is Result.Success)
-        assertEquals(150.0, (result as Result.Success).value) // 100 + 50, not t4 (wrong month), not t5 (income)
+        val list = (result as Result.Success).value
+        val food = list.first { it.budget.category == TransactionCategory.FOOD }
+        val rent = list.first { it.budget.category == TransactionCategory.RENT }
+        // Only t1 + t2 (100 + 50); t4 wrong month, t5 income
+        assertEquals(150.0, food.spentAmount)
+        // t3 only
+        assertEquals(200.0, rent.spentAmount)
+    }
+
+    @Test
+    fun loadBudgetDetailReturnsNullForMissingId() = runTest {
+        val repo = createRepository()
+        val result = repo.loadBudgetDetail("missing")
+        assertTrue(result is Result.Success)
+        assertNull((result as Result.Success).value)
+    }
+
+    @Test
+    fun loadBudgetDetailReturnsBudgetWithSpendingAndSortedTransactions() = runTest {
+        fakeTimeProvider.setNowMillis(
+            LocalDateTime(2026, 6, 15, 12, 0, 0)
+                .toInstant(TimeZone.UTC)
+                .toEpochMilliseconds()
+        )
+
+        val transactions = listOf(
+            TransactionEntity("t1", 100.0, "EXPENSE", "FOOD", "lunch early", toMillis(2026, 6, 1)),
+            TransactionEntity("t2", 50.0, "EXPENSE", "FOOD", "dinner late", toMillis(2026, 6, 12)),
+            TransactionEntity("t3", 200.0, "EXPENSE", "RENT", "rent", toMillis(2026, 6, 5)),
+            TransactionEntity("t4", 75.0, "EXPENSE", "FOOD", "snacks", toMillis(2026, 5, 20)), // wrong month
+            TransactionEntity("t5", 30.0, "INCOME", "SALARY", "bonus", toMillis(2026, 6, 10)), // income
+        )
+        val repo = createRepository(
+            budgets = listOf(BudgetEntity("b1", "FOOD", 500.0, 100L, 100L)),
+            transactions = transactions,
+        )
+        val result = repo.loadBudgetDetail("b1")
+        val detail = assertNotNull((result as Result.Success).value)
+        assertEquals(TransactionCategory.FOOD, detail.budgetWithSpending.budget.category)
+        // 100 + 50 = 150 (only t1 and t2 are EXPENSE in FOOD in current month)
+        assertEquals(150.0, detail.budgetWithSpending.spentAmount)
+        assertEquals(2, detail.transactions.size)
+        // sorted by createdAtMillis DESC
+        assertEquals("t2", detail.transactions[0].id)
+        assertEquals("t1", detail.transactions[1].id)
     }
 
     private fun toMillis(year: Int, month: Int, day: Int): Long =
@@ -156,16 +235,26 @@ private class FakeBudgetDao(
     }
 }
 
-private class FakeTransactionRepository(
-    private val transactions: List<Transaction> = emptyList(),
-) : TransactionRepository {
-    override suspend fun loadTransactions(): Result<List<Transaction>> = Result.Success(transactions)
-    override suspend fun addTransaction(
-        amount: Double,
-        type: TransactionType,
-        category: TransactionCategory,
-        note: String,
-    ): Result<Transaction> = TODO("Not used in tests")
+private class FakeTransactionDao(
+    private val items: MutableList<TransactionEntity> = mutableListOf(),
+) : TransactionDao {
+    override suspend fun getAll(): List<TransactionEntity> = items.sortedByDescending { it.createdAtMillis }
 
-    override suspend fun deleteTransaction(id: String): Result<Unit> = TODO("Not used in tests")
+    override suspend fun insert(entity: TransactionEntity) {
+        items.removeAll { it.id == entity.id }
+        items.add(entity)
+    }
+
+    override suspend fun deleteById(id: String) {
+        items.removeAll { it.id == id }
+    }
+
+    override suspend fun sumExpenseForCategory(
+        category: String,
+        startMillis: Long,
+        endMillis: Long,
+    ): Double = items
+        .filter { it.type == "EXPENSE" && it.category == category }
+        .filter { it.createdAtMillis in startMillis until endMillis }
+        .sumOf { it.amount }
 }

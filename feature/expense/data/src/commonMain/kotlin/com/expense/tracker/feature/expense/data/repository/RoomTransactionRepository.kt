@@ -1,12 +1,12 @@
 package com.expense.tracker.feature.expense.data.repository
 
-import com.expense.tracker.feature.expense.data.local.TransactionDao
-import com.expense.tracker.feature.expense.data.mapper.toDomain
-import com.expense.tracker.feature.expense.data.mapper.toEntity
 import com.expense.tracker.feature.expense.domain.model.Transaction
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
+import com.expense.tracker.feature.expense.data.mapper.toDomain
+import com.expense.tracker.feature.expense.data.mapper.toEntity
+import com.expense.tracker.shared.core.data.dao.TransactionDao
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.TimeProvider

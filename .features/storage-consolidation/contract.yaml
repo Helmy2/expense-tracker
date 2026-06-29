@@ -1,0 +1,236 @@
+name: storage-consolidation
+goal: >
+  Consolidate the two per-feature Room databases (TransactionDatabase on
+  `expense_tracker.db` and BudgetDatabase on `budget_tracker.db`) into a
+  single shared `AppDatabase` owned by `shared/core/data`, following the
+  Dream default pattern from
+  `.opencode/knowledge-graph/best-practices/11-offline-first-storage-practices.md`
+  §11.2. After this change, the `feature/budget/impl` layer no longer depends
+  on `TransactionRepository`, and the cross-feature read becomes a SQL
+  aggregate inside `RoomBudgetRepository`.
+
+## Why
+
+The current setup deviates from the Dream default. `feature/expense/data` and
+`feature/budget/data` each own a Room database, and `RoomBudgetRepository`
+reads transactions via the `TransactionRepository` interface to compute
+spending. This works but it is:
+
+1. an undocumented exception to the default "one shared database" rule
+2. unnecessarily indirect — the spending calculation can be a SQL `SUM(...)`
+   on the same database
+3. a leak: `feature/budget/impl` ViewModels import `TransactionRepository`
+   to do the same aggregation in the UI layer
+
+## Target Module Layout
+
+```
+shared/core/data/
+  src/commonMain/kotlin/.../database/
+    AppDatabase.kt                          # @Database(entities=[TransactionEntity, BudgetEntity], version=1)
+    AppDatabaseConstructor.kt               # expect/actual
+    AppDatabaseFactory.kt                   # interface
+  src/commonMain/kotlin/.../entity/
+    TransactionEntity.kt                    # MOVED from feature/expense/data
+    BudgetEntity.kt                         # MOVED from feature/budget/data
+  src/commonMain/kotlin/.../dao/
+    TransactionDao.kt                       # MOVED + add sumExpenseForCategory(...)
+    BudgetDao.kt                            # MOVED
+  src/commonMain/kotlin/.../mapper/
+    TransactionMapper.kt                    # MOVED
+    BudgetMapper.kt                         # MOVED
+  src/androidMain/kotlin/.../database/
+    AndroidAppDatabaseFactory.kt            # NEW
+  src/iosMain/kotlin/.../database/
+    IosAppDatabaseFactory.kt                # NEW
+  schemas/                                  # Room schema export goes here
+
+feature/expense/data/
+  src/commonMain/kotlin/.../repository/
+    RoomTransactionRepository.kt            # uses TransactionDao from shared/core/data
+  src/commonTest/kotlin/.../
+    repository/RoomTransactionRepositoryTest.kt  # import path updated
+    mapper/TransactionMapperTest.kt              # import path updated
+  # NO local/, NO androidMain/.../local/, NO iosMain/.../local/
+
+feature/budget/data/
+  src/commonMain/kotlin/.../repository/
+    RoomBudgetRepository.kt                 # uses BudgetDao + TransactionDao from shared/core/data
+                                            # no TransactionRepository dep
+                                            # adds loadBudgetsWithSpending(), loadBudgetDetail(id)
+  src/commonTest/kotlin/.../
+    repository/RoomBudgetRepositoryTest.kt  # drop FakeTransactionRepository; add SQL aggregate test
+  # NO local/, NO androidMain/.../local/, NO iosMain/.../local/
+
+feature/expense/domain/                          # unchanged
+feature/budget/domain/                           # unchanged (still uses TransactionCategory via existing edge)
+
+shared/umbrella-core/
+  src/commonMain/kotlin/.../di/CoreModule.kt     # one appDataModule(databaseFactory, appContext)
+  src/iosMain/kotlin/.../di/
+    BudgetRepositoryFactory.kt                   # use AppDatabase
+    TransactionRepositoryFactory.kt              # use AppDatabase
+    BudgetRepositoryExtensions.kt                # add loadBudgetsWithSpendingOrThrow, loadBudgetDetailOrThrow
+    TransactionRepositoryExtensions.kt           # unchanged
+
+shared/umbrella-ui/
+  src/commonMain/kotlin/.../di/UiModule.kt       # one databaseFactory param
+  src/iosMain/kotlin/.../MainViewController.kt   # pass single factory
+
+androidApp/
+  src/main/kotlin/.../MainActivity.kt            # pass AndroidAppDatabaseFactory only
+
+iosApp/iosApp/Core/
+  AppDependencies.swift                          # unchanged surface
+  BudgetRepositoryBridge.swift                   # add loadBudgetsWithSpending, loadBudgetDetail
+  TransactionRepositoryBridge.swift              # unchanged
+
+iosApp/iosApp/Budget/ViewModels/
+  BudgetListViewModel.swift                      # drop transactionBridge param
+  BudgetDetailViewModel.swift                    # drop transactionBridge param
+```
+
+## Schema
+
+```sql
+-- AppDatabase v1
+CREATE TABLE IF NOT EXISTS `transactions` (
+  `id` TEXT NOT NULL,
+  `amount` REAL NOT NULL,
+  `type` TEXT NOT NULL,
+  `category` TEXT NOT NULL,
+  `note` TEXT NOT NULL,
+  `createdAtMillis` INTEGER NOT NULL,
+  PRIMARY KEY(`id`)
+);
+
+CREATE TABLE IF NOT EXISTS `budgets` (
+  `id` TEXT NOT NULL,
+  `category` TEXT NOT NULL,
+  `monthlyLimit` REAL NOT NULL,
+  `createdAtMillis` INTEGER NOT NULL,
+  `updatedAtMillis` INTEGER NOT NULL,
+  PRIMARY KEY(`id`)
+);
+```
+
+On-device database path: `expense_tracker.db` (keep the existing filename on
+Android so current installs continue to find the file in the same location;
+destructive fallback handles the schema upgrade).
+
+## New DAO Method (Kotlin)
+
+```kotlin
+// shared/core/data/.../dao/TransactionDao.kt
+@Query("""
+    SELECT COALESCE(SUM(amount), 0.0)
+    FROM transactions
+    WHERE category = :category
+      AND type = 'EXPENSE'
+      AND createdAtMillis >= :startMillis
+      AND createdAtMillis < :endMillis
+""")
+suspend fun sumExpenseForCategory(
+    category: String,
+    startMillis: Long,
+    endMillis: Long,
+): Double
+```
+
+## Repository Surface (Kotlin)
+
+`RoomBudgetRepository` gains two new methods (and keeps the existing CRUD
+methods for parity). These are the only methods that need the `TransactionDao`:
+
+```kotlin
+suspend fun loadBudgetsWithSpending(): Result<List<BudgetWithSpending>>
+suspend fun loadBudgetDetail(id: String): Result<BudgetDetail?>
+```
+
+Implementation outline:
+- `loadBudgetsWithSpending()`:
+  - call `budgetDao.getAll()` to load all budgets
+  - for each budget, call `transactionDao.sumExpenseForCategory(category.name, startMillis, endMillis)` with the current `YearMonth`'s `[start, end)` window derived from `timeProvider.currentYearMonth()` and `timeProvider.timeZone()`
+  - map to `BudgetWithSpending` via `budget.withSpending(spent)`
+  - if the SQL query throws, return `Result.Failure(AppError.Unknown)`
+- `loadBudgetDetail(id)`:
+  - call `budgetDao.getById(id) ?: return Success(null)`
+  - call `sumExpenseForCategory(...)` for the spending
+  - call `transactionDao.getAll()` (existing) and filter in Kotlin to the same `[startMillis, endMillis)` and category and `type == EXPENSE`, sorted by `createdAtMillis DESC`
+  - return `BudgetDetail(budgetWithSpending, transactions)`
+
+YearMonth → millis window: extend `TimeProvider` with a `yearMonthRangeMillis(ym: YearMonth): LongRange` helper (or compute it in the repository using `kotlinx.datetime`). The cleanest place for the helper is `shared/core/domain` (next to `TimeProvider`) — see `13-time-and-logical-date-practices.md`. Add a corresponding fake-time override in `FakeTimeProvider`.
+
+## Bridge Surface (iOS)
+
+`BudgetRepositoryBridge` protocol gains:
+
+```swift
+func loadBudgetsWithSpending() async throws -> [BudgetWithSpendingData]
+func loadBudgetDetail(id: String) async throws -> BudgetDetailData?
+```
+
+`BudgetDetailData` is a new native model that mirrors Kotlin `BudgetDetail`
+(budgetWithSpending + transactions). Add `BudgetDetailData.swift` under
+`iosApp/iosApp/Budget/Models/`. Re-run `ruby scripts/sync-pbxproj.rb` to
+register it.
+
+`TransactionRepositoryBridge` is unchanged. `BudgetListViewModel` and
+`BudgetDetailViewModel` drop the `transactionBridge` parameter entirely.
+
+## Dependency Graph After
+
+```
+shared/core/data
+  ↑ (api)
+feature/expense/data ── depends on ── shared/core/data, feature/expense/domain
+feature/budget/data  ── depends on ── shared/core/data, feature/budget/domain
+                                     (no longer feature/expense/domain)
+feature/expense/impl  ── depends on ── feature/expense/api, feature/expense/domain,
+                                        shared/core/presentation, designsystem, navigation
+                                        (no longer feature/expense/data)
+feature/budget/impl   ── depends on ── feature/budget/api, feature/budget/domain,
+                                        feature/expense/domain (for TransactionCategory only),
+                                        shared/core/presentation, designsystem, navigation
+```
+
+`crossFeatureReuse` in `.features/decisions.yaml` shrinks to: budget reuses
+`TransactionCategory` enum only (a value object with no behavior, acceptable
+per §32.2).
+
+## Required Tests
+
+- `shared/core/data/commonTest`: new test for `TransactionDao.sumExpenseForCategory` (use `Room.inMemoryDatabaseBuilder` against a fake `AppDatabase`, or document that the SQL is exercised via `RoomBudgetRepository`).
+- `feature/expense/data/commonTest/RoomTransactionRepositoryTest`: existing tests, with import paths updated. No behavioral change.
+- `feature/budget/data/commonTest/RoomBudgetRepositoryTest`:
+  - drop `FakeTransactionRepository` and the `transactionRepository` constructor argument
+  - add tests for `loadBudgetsWithSpending()` and `loadBudgetDetail(id)` covering:
+    - empty budget list → empty spending list
+    - budget with no transactions in current month → spent = 0
+    - budget with transactions across months → only current month counted
+    - budget with both INCOME and EXPENSE transactions → only EXPENSE counted
+    - `loadBudgetDetail` returns null for missing id
+    - `loadBudgetDetail` returns the right list sorted DESC by `createdAtMillis`
+- `feature/expense/impl/commonTest/ExpenseViewModelTest`: unchanged.
+- `feature/budget/impl/commonTest/BudgetViewModelTest`: drop `FakeTransactionRepository`; `FakeBudgetRepository` now implements the new `loadBudgetsWithSpending()` and `loadBudgetDetail(id)` methods.
+- `feature/budget/impl/commonTest/BudgetDetailViewModelTest`: same.
+- `iosApp/iosAppTests/BudgetListViewModelTests`: drop `MockTransactionRepositoryBridge` parameter; `MockBudgetRepositoryBridge` adds `budgetsWithSpendingToReturn`.
+- `iosApp/iosAppTests/BudgetDetailViewModelTests`: same.
+
+## Verification
+
+- `./gradlew allTests` — must pass on Android and iOS
+- `./gradlew :androidApp:assembleDebug` — must pass
+- `xcodebuild ... build` — must pass
+- `xcodebuild ... test` — must pass
+- Maestro flows: `expense` and `budget` Android + iOS — must pass unchanged
+
+## Out Of Scope
+
+- Moving `TransactionCategory` to a shared domain module
+- Non-destructive Room migrations (destructive fallback is acceptable here)
+- Adding `LoadBudgetsWithSpending` / `LoadBudgetDetail` to the public
+  contract actions for the budget feature (they're repository methods, not
+  user actions)
+- Changing Maestro flows
+- Any commit (delegated to `dream-general` after verification is green)

@@ -1,7 +1,9 @@
 package com.expense.tracker.shared.core.domain
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -24,6 +26,47 @@ class TimeProviderTest {
             expected = YearMonth(year = 2026, month = 2),
             actual = timeProvider.currentYearMonth(),
         )
+    }
+
+    @Test
+    fun yearMonthRangeMillisReturnsHalfOpenRangeForCurrentMonth() {
+        val zone = TimeZone.UTC
+        val expectedStart = LocalDateTime(2026, 2, 1, 0, 0)
+            .toInstant(zone)
+            .toEpochMilliseconds()
+        val expectedEnd = LocalDateTime(2026, 3, 1, 0, 0)
+            .toInstant(zone)
+            .toEpochMilliseconds()
+
+        val range = timeProvider.yearMonthRangeMillis(YearMonth(year = 2026, month = 2))
+
+        assertEquals(expectedStart, range.first)
+        assertEquals(expectedEnd, range.last + 1)
+    }
+
+    @Test
+    fun yearMonthRangeMillisWrapsDecemberToJanuaryOfNextYear() {
+        val zone = TimeZone.UTC
+        val expectedStart = LocalDateTime(2026, 12, 1, 0, 0)
+            .toInstant(zone)
+            .toEpochMilliseconds()
+        val expectedEnd = LocalDateTime(2027, 1, 1, 0, 0)
+            .toInstant(zone)
+            .toEpochMilliseconds()
+
+        val range = timeProvider.yearMonthRangeMillis(YearMonth(year = 2026, month = 12))
+
+        assertEquals(expectedStart, range.first)
+        assertEquals(expectedEnd, range.last + 1)
+    }
+
+    @Test
+    fun yearMonthRangeMillisIsContiguousAcrossMonths() {
+        val jan = timeProvider.yearMonthRangeMillis(YearMonth(year = 2026, month = 1))
+        val feb = timeProvider.yearMonthRangeMillis(YearMonth(year = 2026, month = 2))
+
+        // The end of January equals the start of February (half-open boundary).
+        assertEquals(jan.last + 1, feb.first)
     }
 
     @Test

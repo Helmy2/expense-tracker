@@ -10,7 +10,6 @@ final class BudgetListViewModel {
     }
 
     private let bridge: any BudgetRepositoryBridge
-    private let transactionBridge: any TransactionRepositoryBridge
 
     var contentState: ContentState = .loading
     var showFormSheet = false
@@ -20,11 +19,9 @@ final class BudgetListViewModel {
     var pendingDeleteId: String?
 
     init(
-        bridge: any BudgetRepositoryBridge = AppDependencies.shared.budgetBridge,
-        transactionBridge: any TransactionRepositoryBridge = AppDependencies.shared.expenseBridge
+        bridge: any BudgetRepositoryBridge = AppDependencies.shared.budgetBridge
     ) {
         self.bridge = bridge
-        self.transactionBridge = transactionBridge
     }
 
     func load(force: Bool = false) async {
@@ -32,18 +29,8 @@ final class BudgetListViewModel {
         contentState = .loading
 
         do {
-            let budgets = try await bridge.loadBudgets()
-            let transactions = try await transactionBridge.loadTransactions()
-
-            let budgetsWithSpending = budgets.map { budget in
-                let spent = computeSpending(
-                    for: budget.category,
-                    transactions: transactions
-                )
-                return BudgetWithSpendingData.compute(budget: budget, spentAmount: spent)
-            }
-
-            let sorted = budgetsWithSpending.sorted { $0.budget.category.displayName < $1.budget.category.displayName }
+            let items = try await bridge.loadBudgetsWithSpending()
+            let sorted = items.sorted { $0.budget.category.displayName < $1.budget.category.displayName }
             contentState = sorted.isEmpty ? .empty : .content(sorted)
         } catch {
             contentState = .error(error.localizedDescription)
@@ -100,24 +87,5 @@ final class BudgetListViewModel {
         editingBudgetId = nil
         formState.reset()
         showFormSheet = true
-    }
-
-    private func computeSpending(
-        for category: ExpenseCategory,
-        transactions: [ExpenseItem]
-    ) -> Double {
-        let now = Date()
-        let calendar = Calendar.current
-        let currentMonth = calendar.component(.month, from: now)
-        let currentYear = calendar.component(.year, from: now)
-
-        return transactions
-            .filter { $0.type == .expense && $0.category == category }
-            .filter { item in
-                let date = Date(timeIntervalSince1970: TimeInterval(item.createdAtMillis) / 1000)
-                return calendar.component(.month, from: date) == currentMonth
-                    && calendar.component(.year, from: date) == currentYear
-            }
-            .reduce(0) { $0 + $1.amount }
     }
 }

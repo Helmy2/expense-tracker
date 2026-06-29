@@ -4,21 +4,24 @@ import XCTest
 final class BudgetDetailViewModelTests: XCTestCase {
     func testLoadSetsContentStateWithBudgetDetail() async {
         let budgetBridge = MockBudgetRepositoryBridge()
-        let transactionBridge = MockTransactionRepositoryBridge()
-        budgetBridge.budgetToReturn = makeBudgetItem(id: "detail-1", category: .food, monthlyLimit: 500)
-
         let now = Date()
         let calendar = Calendar.current
         let currentMonth = calendar.component(.month, from: now)
         let currentYear = calendar.component(.year, from: now)
         let timestamp = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 15))!
 
-        transactionBridge.transactionsToReturn = [
-            makeExpenseItem(id: "t1", amount: 25, type: .expense, category: .food, createdAtMillis: Int64(timestamp.timeIntervalSince1970 * 1000)),
-            makeExpenseItem(id: "t2", amount: 35, type: .expense, category: .food, createdAtMillis: Int64(timestamp.timeIntervalSince1970 * 1000))
-        ]
+        budgetBridge.budgetDetailToReturn = BudgetDetailData(
+            budgetWithSpending: BudgetWithSpendingData.compute(
+                budget: makeBudgetItem(id: "detail-1", category: .food, monthlyLimit: 500),
+                spentAmount: 60
+            ),
+            transactions: [
+                makeExpenseItem(id: "t1", amount: 25, type: .expense, category: .food, createdAtMillis: Int64(timestamp.timeIntervalSince1970 * 1000)),
+                makeExpenseItem(id: "t2", amount: 35, type: .expense, category: .food, createdAtMillis: Int64(timestamp.timeIntervalSince1970 * 1000))
+            ]
+        )
 
-        let viewModel = BudgetDetailViewModel(bridge: budgetBridge, transactionBridge: transactionBridge)
+        let viewModel = BudgetDetailViewModel(bridge: budgetBridge)
         await viewModel.load(budgetId: "detail-1")
 
         if case .content(let budgetWithSpending, let transactions) = viewModel.contentState {
@@ -32,10 +35,9 @@ final class BudgetDetailViewModelTests: XCTestCase {
 
     func testLoadSetsErrorStateWhenBudgetNotFound() async {
         let budgetBridge = MockBudgetRepositoryBridge()
-        let transactionBridge = MockTransactionRepositoryBridge()
-        budgetBridge.budgetToReturn = nil
+        budgetBridge.budgetDetailToReturn = nil
 
-        let viewModel = BudgetDetailViewModel(bridge: budgetBridge, transactionBridge: transactionBridge)
+        let viewModel = BudgetDetailViewModel(bridge: budgetBridge)
         await viewModel.load(budgetId: "nonexistent")
 
         if case .error(let message) = viewModel.contentState {
@@ -47,10 +49,9 @@ final class BudgetDetailViewModelTests: XCTestCase {
 
     func testLoadSetsErrorStateWhenBridgeThrows() async {
         let budgetBridge = MockBudgetRepositoryBridge()
-        let transactionBridge = MockTransactionRepositoryBridge()
-        budgetBridge.loadBudgetByIdError = MockBridgeError(errorDescription: "Database error")
+        budgetBridge.loadBudgetsError = MockBridgeError(errorDescription: "Database error")
 
-        let viewModel = BudgetDetailViewModel(bridge: budgetBridge, transactionBridge: transactionBridge)
+        let viewModel = BudgetDetailViewModel(bridge: budgetBridge)
         await viewModel.load(budgetId: "any-id")
 
         if case .error(let message) = viewModel.contentState {
@@ -62,9 +63,8 @@ final class BudgetDetailViewModelTests: XCTestCase {
 
     func testDeleteBudgetCallsBridge() async {
         let budgetBridge = MockBudgetRepositoryBridge()
-        let transactionBridge = MockTransactionRepositoryBridge()
 
-        let viewModel = BudgetDetailViewModel(bridge: budgetBridge, transactionBridge: transactionBridge)
+        let viewModel = BudgetDetailViewModel(bridge: budgetBridge)
         await viewModel.deleteBudget(budgetId: "to-delete")
 
         XCTAssertEqual(budgetBridge.deleteCallCount, 1)
@@ -74,9 +74,6 @@ final class BudgetDetailViewModelTests: XCTestCase {
 
     func testLoadFiltersTransactionsToCurrentMonth() async {
         let budgetBridge = MockBudgetRepositoryBridge()
-        let transactionBridge = MockTransactionRepositoryBridge()
-        budgetBridge.budgetToReturn = makeBudgetItem(id: "detail-2", category: .food, monthlyLimit: 500)
-
         let now = Date()
         let calendar = Calendar.current
         let currentMonth = calendar.component(.month, from: now)
@@ -84,13 +81,19 @@ final class BudgetDetailViewModelTests: XCTestCase {
         let currentTimestamp = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: 10))!
         let lastMonthTimestamp = calendar.date(from: DateComponents(year: currentYear, month: max(currentMonth - 1, 1), day: 10))!
 
-        transactionBridge.transactionsToReturn = [
-            makeExpenseItem(id: "t1", amount: 25, type: .expense, category: .food, createdAtMillis: Int64(currentTimestamp.timeIntervalSince1970 * 1000)),
-            makeExpenseItem(id: "t2", amount: 50, type: .expense, category: .food, createdAtMillis: Int64(lastMonthTimestamp.timeIntervalSince1970 * 1000)),
-            makeExpenseItem(id: "t3", amount: 30, type: .expense, category: .rent, createdAtMillis: Int64(currentTimestamp.timeIntervalSince1970 * 1000))
-        ]
+        budgetBridge.budgetDetailToReturn = BudgetDetailData(
+            budgetWithSpending: BudgetWithSpendingData.compute(
+                budget: makeBudgetItem(id: "detail-2", category: .food, monthlyLimit: 500),
+                spentAmount: 25
+            ),
+            transactions: [
+                makeExpenseItem(id: "t1", amount: 25, type: .expense, category: .food, createdAtMillis: Int64(currentTimestamp.timeIntervalSince1970 * 1000))
+            ]
+        )
+        // lastMonthTimestamp and rent-tx are not used; the bridge returns a pre-filtered list.
+        _ = lastMonthTimestamp
 
-        let viewModel = BudgetDetailViewModel(bridge: budgetBridge, transactionBridge: transactionBridge)
+        let viewModel = BudgetDetailViewModel(bridge: budgetBridge)
         await viewModel.load(budgetId: "detail-2")
 
         if case .content(let budgetWithSpending, let transactions) = viewModel.contentState {

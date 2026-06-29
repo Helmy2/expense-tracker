@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct BudgetWithSpendingData: Identifiable {
+struct BudgetWithSpendingData: Identifiable, Equatable {
     let budget: BudgetItem
     let spentAmount: Double
     let remainingAmount: Double

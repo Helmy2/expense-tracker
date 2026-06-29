@@ -1,10 +1,10 @@
 package com.expense.tracker.feature.expense.data.repository
 
-import com.expense.tracker.feature.expense.data.local.TransactionDao
-import com.expense.tracker.feature.expense.data.local.TransactionEntity
 import com.expense.tracker.feature.expense.domain.model.Transaction
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
+import com.expense.tracker.shared.core.data.dao.TransactionDao
+import com.expense.tracker.shared.core.data.entity.TransactionEntity
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.testing.FakeTimeProvider
 import kotlinx.coroutines.test.runTest
@@ -124,6 +124,15 @@ private class FakeTransactionDao(
     override suspend fun deleteById(id: String) {
         items.removeAll { existing -> existing.id == id }
     }
+
+    override suspend fun sumExpenseForCategory(
+        category: String,
+        startMillis: Long,
+        endMillis: Long,
+    ): Double = items
+        .filter { it.category == category && it.type == "EXPENSE" }
+        .filter { it.createdAtMillis in startMillis until endMillis }
+        .sumOf { it.amount }
 }
 
 private class FailingTransactionDao : TransactionDao {
@@ -132,4 +141,10 @@ private class FailingTransactionDao : TransactionDao {
     override suspend fun insert(entity: TransactionEntity) = throw RuntimeException("DAO failure")
 
     override suspend fun deleteById(id: String) = throw RuntimeException("DAO failure")
+
+    override suspend fun sumExpenseForCategory(
+        category: String,
+        startMillis: Long,
+        endMillis: Long,
+    ): Double = throw RuntimeException("DAO failure")
 }

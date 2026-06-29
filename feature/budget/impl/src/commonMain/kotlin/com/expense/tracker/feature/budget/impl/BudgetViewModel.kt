@@ -1,23 +1,14 @@
 package com.expense.tracker.feature.budget.impl
 
-import com.expense.tracker.feature.budget.domain.model.Budget
-import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
-import com.expense.tracker.feature.budget.domain.model.withSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
-import com.expense.tracker.feature.expense.domain.model.TransactionType
-import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.TimeProvider
-import com.expense.tracker.shared.core.domain.YearMonth
 import com.expense.tracker.shared.core.presentation.MviViewModel
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toLocalDateTime
 
 class BudgetViewModel(
     private val budgetRepository: BudgetRepository,
-    private val transactionRepository: TransactionRepository,
     private val timeProvider: TimeProvider,
 ) : MviViewModel<BudgetState, BudgetAction, BudgetEvent>(
     initialState = BudgetState(),
@@ -83,13 +74,12 @@ class BudgetViewModel(
     private suspend fun load() {
         updateState { it.copy(contentState = BudgetContentState.Loading) }
 
-        when (val result = budgetRepository.loadBudgets()) {
+        when (val result = budgetRepository.loadBudgetsWithSpending()) {
             is Result.Success -> {
-                val budgets = result.value
-                if (budgets.isEmpty()) {
+                val budgetsWithSpending = result.value
+                if (budgetsWithSpending.isEmpty()) {
                     updateState { it.copy(contentState = BudgetContentState.Empty) }
                 } else {
-                    val budgetsWithSpending = calculateSpendingForBudgets(budgets)
                     updateState {
                         it.copy(contentState = BudgetContentState.Content(budgetsWithSpending))
                     }
@@ -98,35 +88,6 @@ class BudgetViewModel(
             is Result.Failure -> updateState {
                 it.copy(contentState = BudgetContentState.Error(result.error))
             }
-        }
-    }
-
-    private suspend fun calculateSpendingForBudgets(
-        budgets: List<Budget>,
-    ): List<BudgetWithSpending> {
-        val transactions = when (val result = transactionRepository.loadTransactions()) {
-            is Result.Success -> result.value
-            is Result.Failure -> emptyList()
-        }
-
-        val yearMonth = timeProvider.currentYearMonth()
-
-        return budgets.map { budget ->
-            val spent = transactions
-                .filter { it.type == TransactionType.EXPENSE }
-                .filter { it.category == budget.category }
-                .filter {
-                    val localDateTime = Instant.fromEpochMilliseconds(it.createdAtMillis)
-                        .toLocalDateTime(timeProvider.timeZone())
-                    val txYearMonth = YearMonth(
-                        year = localDateTime.year,
-                        month = localDateTime.monthNumber,
-                    )
-                    txYearMonth == yearMonth
-                }
-                .sumOf { it.amount }
-
-            budget.withSpending(spent)
         }
     }
 

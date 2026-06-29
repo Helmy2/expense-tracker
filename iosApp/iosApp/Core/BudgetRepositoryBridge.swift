@@ -8,6 +8,8 @@ protocol BudgetRepositoryBridge {
     func createBudget(category: ExpenseCategory, monthlyLimit: Double) async throws -> BudgetItem
     func updateBudget(id: String, monthlyLimit: Double) async throws -> BudgetItem
     func deleteBudget(id: String) async throws
+    func loadBudgetsWithSpending() async throws -> [BudgetWithSpendingData]
+    func loadBudgetDetail(id: String) async throws -> BudgetDetailData?
 }
 
 final class SharedBudgetRepositoryBridge: BudgetRepositoryBridge {
@@ -53,6 +55,21 @@ final class SharedBudgetRepositoryBridge: BudgetRepositoryBridge {
         try await repository.deleteBudgetOrThrow(id: id)
     }
 
+    func loadBudgetsWithSpending() async throws -> [BudgetWithSpendingData] {
+        let kotlinList = try await repository.loadBudgetsWithSpendingOrThrow()
+        return kotlinList.map { mapBudgetWithSpendingFromKotlin($0) }
+    }
+
+    func loadBudgetDetail(id: String) async throws -> BudgetDetailData? {
+        guard let kotlinDetail = try await repository.loadBudgetDetailOrThrow(id: id) else {
+            return nil
+        }
+        return BudgetDetailData(
+            budgetWithSpending: mapBudgetWithSpendingFromKotlin(kotlinDetail.budgetWithSpending),
+            transactions: kotlinDetail.transactions.map { mapTransactionFromKotlin($0) }
+        )
+    }
+
     private func mapFromKotlin(_ budget: SharedCore.Budget) -> BudgetItem {
         BudgetItem(
             id: budget.id,
@@ -60,6 +77,24 @@ final class SharedBudgetRepositoryBridge: BudgetRepositoryBridge {
             monthlyLimit: Double(budget.monthlyLimit),
             createdAtMillis: budget.createdAtMillis,
             updatedAtMillis: budget.updatedAtMillis
+        )
+    }
+
+    private func mapBudgetWithSpendingFromKotlin(_ bws: SharedCore.BudgetWithSpending) -> BudgetWithSpendingData {
+        BudgetWithSpendingData.compute(
+            budget: mapFromKotlin(bws.budget),
+            spentAmount: Double(bws.spentAmount)
+        )
+    }
+
+    private func mapTransactionFromKotlin(_ transaction: SharedCore.Transaction) -> ExpenseItem {
+        ExpenseItem(
+            id: transaction.id,
+            amount: transaction.amount,
+            type: transaction.type.asSwiftType,
+            category: transaction.category.asSwiftCategory,
+            note: transaction.note,
+            createdAtMillis: transaction.createdAtMillis
         )
     }
 }
