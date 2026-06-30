@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -75,6 +77,9 @@ import com.expense.tracker.shared.core.strings.expense_transactions_label
 import com.expense.tracker.shared.core.strings.expense_type_expense
 import com.expense.tracker.shared.core.strings.expense_type_income
 import com.expense.tracker.shared.core.strings.expense_type_label
+import com.expense.tracker.shared.core.strings.recurring_next_due
+import com.expense.tracker.shared.core.strings.recurring_see_all
+import com.expense.tracker.shared.core.strings.recurring_upcoming_title
 import com.expense.tracker.shared.designsystem.DreamTheme
 import com.expense.tracker.shared.designsystem.components.Button
 import com.expense.tracker.shared.designsystem.components.ButtonVariant
@@ -100,6 +105,8 @@ fun ExpenseContent(
     state: ExpenseState,
     onAction: (ExpenseAction) -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateToRecurringList: () -> Unit = {},
+    onNavigateToRecurringEdit: (String) -> Unit = {},
 ) {
 
     Column(
@@ -125,6 +132,16 @@ fun ExpenseContent(
                 DashboardSection(dashboard = state.dashboard)
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = DreamTheme.spacing.xs))
+
+                if (state.upcomingRecurring.isNotEmpty()) {
+                    DashboardUpcomingSection(
+                        upcomingItems = state.upcomingRecurring,
+                        onSeeAllClick = onNavigateToRecurringList,
+                        onItemClick = { onNavigateToRecurringEdit(it) },
+                    )
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = DreamTheme.spacing.xs))
+                }
 
                 TransactionListSection(
                     transactions = contentState.transactions,
@@ -162,6 +179,89 @@ private fun EmptyStateCard() {
         variant = CardVariant.Filled,
         accentColor = MaterialTheme.colorScheme.secondary,
     )
+}
+
+@Composable
+private fun DashboardUpcomingSection(
+    upcomingItems: List<UpcomingRecurringUi>,
+    onSeeAllClick: () -> Unit,
+    onItemClick: (String) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = DreamTheme.spacing.md),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(Res.string.recurring_upcoming_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Button(
+                text = stringResource(Res.string.recurring_see_all),
+                onClick = onSeeAllClick,
+                variant = ButtonVariant.Tertiary,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(DreamTheme.spacing.sm))
+
+        upcomingItems.take(3).forEach { item ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onItemClick(item.templateId) }
+                    .padding(
+                        horizontal = DreamTheme.spacing.md,
+                        vertical = DreamTheme.spacing.sm,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (item.isIncome) IncomeGreen.copy(alpha = 0.15f)
+                            else ExpenseRed.copy(alpha = 0.15f)
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = if (item.isIncome) Icons.Filled.KeyboardArrowUp
+                        else Icons.Filled.KeyboardArrowDown,
+                        tint = if (item.isIncome) IncomeGreen else ExpenseRed,
+                        contentDescription = null,
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(DreamTheme.spacing.md))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.formattedAmount,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (item.isIncome) IncomeGreen else ExpenseRed,
+                    )
+                    Text(
+                        text = "${item.category.asLabel()} \u00B7 ${item.frequencyLabel}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                Text(
+                    text = "${stringResource(Res.string.recurring_next_due)}: ${item.nextDueDateFormatted}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            if (item != upcomingItems.take(3).last()) {
+                HorizontalDivider(modifier = Modifier.padding(start = DreamTheme.spacing.md))
+            }
+        }
+    }
 }
 
 @Composable

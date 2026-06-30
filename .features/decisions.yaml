@@ -34,6 +34,8 @@ storage:
       owner: feature/expense
     - name: budgets
       owner: feature/budget
+    - name: recurring_templates
+      owner: feature/recurring-transactions
   crossFeatureRead:
     mechanism: sql-aggregate
     query: >
@@ -53,4 +55,29 @@ crossFeatureReuse:
           (an enum with no behavior) and is acceptable per
           §32.2. TransactionCategory is a candidate to move to a
           shared domain module when a third feature needs it.
+        tracked: true
+
+  - feature: recurring-transactions
+    reuse:
+      - module: feature/expense/domain
+        reason: >
+          Recurring templates reuse TransactionCategory and TransactionType
+          enums from feature/expense/domain. Value-object reuse per §32.2.
+        tracked: true
+      - module: shared/core/data (TransactionDao)
+        reason: >
+          The processDueRecurringTransactions() function creates
+          TransactionEntity records directly via TransactionDao when a
+          recurring template is due. Cross-feature data coupling is an
+          exception documented here; both features share the same
+          AppDatabase and table.
+        tracked: true
+
+  - feature: expense (dashboard)
+    reuse:
+      - module: feature/recurring-transactions/domain
+        reason: >
+          The expense dashboard (feature/expense/impl) reads upcoming
+          recurring transactions via RecurringTemplateRepository (domain).
+          Allowed via Aggregator Exception [dep-7].
         tracked: true

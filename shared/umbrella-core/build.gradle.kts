@@ -9,6 +9,8 @@ dependencies {
     commonMainApi(projects.feature.budget.domain)
     commonMainApi(projects.feature.expense.data)
     commonMainApi(projects.feature.expense.domain)
+    commonMainApi(projects.feature.recurringTransactions.data)
+    commonMainApi(projects.feature.recurringTransactions.domain)
     commonMainApi(projects.shared.core.data)
     commonMainApi(projects.shared.core.domain)
     commonMainImplementation(libs.koin.core)
@@ -29,6 +31,8 @@ kotlin {
             export(projects.feature.budget.domain)
             export(projects.feature.expense.data)
             export(projects.feature.expense.domain)
+            export(projects.feature.recurringTransactions.data)
+            export(projects.feature.recurringTransactions.domain)
             export(projects.shared.core.data)
             export(projects.shared.core.domain)
         }

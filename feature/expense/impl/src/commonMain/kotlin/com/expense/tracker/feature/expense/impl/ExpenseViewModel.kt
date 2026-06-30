@@ -4,14 +4,20 @@ import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.expense.domain.model.computeDashboard
 import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
+import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
+import com.expense.tracker.feature.recurring.domain.model.UpcomingRecurring
+import com.expense.tracker.feature.recurring.domain.repository.RecurringTemplateRepository
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.asMessageText
 import com.expense.tracker.shared.core.domain.TimeProvider
 import com.expense.tracker.shared.core.presentation.MviViewModel
+import kotlin.math.abs
+import kotlin.math.round
 
 class ExpenseViewModel(
     private val repository: TransactionRepository,
+    private val recurringRepository: RecurringTemplateRepository,
     private val timeProvider: TimeProvider,
     val mapper: ExpensePresentationMapper,
 ) : MviViewModel<ExpenseState, ExpenseAction, ExpenseEvent>(
@@ -40,6 +46,9 @@ class ExpenseViewModel(
             is ExpenseAction.DismissFormSheet -> updateState {
                 it.copy(showBottomSheet = false)
             }
+            is ExpenseAction.NavigateToRecurringList -> {
+                // handled at screen level via navigation callback
+            }
         }
     }
 
@@ -50,14 +59,22 @@ class ExpenseViewModel(
             is Result.Success -> {
                 val transactions = result.value
                 val dashboard = computeDashboard(transactions)
+
+                val upcomingResult = recurringRepository.loadUpcoming(5)
+                val upcomingItems = when (upcomingResult) {
+                    is Result.Success -> upcomingResult.value
+                    is Result.Failure -> emptyList()
+                }
+
                 updateState { current ->
                     current.copy(
-                        contentState = if (transactions.isEmpty()) {
+                        contentState = if (transactions.isEmpty() && upcomingItems.isEmpty()) {
                             ExpenseContentState.Empty
                         } else {
                             ExpenseContentState.Content(transactions.map(mapper::toTransactionUi))
                         },
                         dashboard = mapper.toDashboardUi(dashboard),
+                        upcomingRecurring = upcomingItems.map { it.toUpcomingUi() },
                     )
                 }
             }
@@ -113,5 +130,29 @@ class ExpenseViewModel(
                 sendEvent(ExpenseEvent.Error(result.error.asMessageText()))
             }
         }
+    }
+
+    private fun UpcomingRecurring.toUpcomingUi(): UpcomingRecurringUi = UpcomingRecurringUi(
+        templateId = templateId,
+        formattedAmount = formatSignedAmount(amount, type == TransactionType.INCOME),
+        category = category,
+        frequencyLabel = frequencyLabel(frequency),
+        nextDueDateFormatted = timeProvider.formatDate(nextDueDateMillis),
+        isIncome = type == TransactionType.INCOME,
+    )
+
+    private fun formatSignedAmount(amount: Double, isIncome: Boolean): String {
+        val sign = if (isIncome) "+" else "-"
+        val absolute = abs(amount)
+        val whole = absolute.toLong()
+        val cents = round((absolute - whole) * 100).toInt()
+        return "$sign $${whole}.${cents.toString().padStart(2, '0')}"
+    }
+
+    private fun frequencyLabel(frequency: RecurringFrequency): String = when (frequency) {
+        RecurringFrequency.DAILY -> "Daily"
+        RecurringFrequency.WEEKLY -> "Weekly"
+        RecurringFrequency.MONTHLY -> "Monthly"
+        RecurringFrequency.YEARLY -> "Yearly"
     }
 }

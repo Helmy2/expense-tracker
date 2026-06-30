@@ -29,19 +29,32 @@
 		27A5EAE59358859823246419 /* ExpenseFormState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91CCB5A20C241314DBED0F52 /* ExpenseFormState.swift */; };
 		286784CCD74CCAC0BE3C59E8 /* BudgetItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C1476E83F40E6A2F21F1DBF /* BudgetItem.swift */; };
 		31F542CF3ACA60239B859CED /* BudgetListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 313207C0B3D50FC13F41E479 /* BudgetListViewModel.swift */; };
+		346594EFE7A36EC44F1B1C57 /* RecurringRepositoryBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0198081F1D7EBDC31934B933 /* RecurringRepositoryBridge.swift */; };
+		46803E4D4F77809D3FA2156B /* RecurringListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B708FF982672E65064C6513 /* RecurringListView.swift */; };
+		47A8E7D1AE803E8CB917AF09 /* RecurringFormState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08FCC5E6ACCE2F7E64C82A27 /* RecurringFormState.swift */; };
+		482F4016E8B99170C7E3DD75 /* RecurringListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2688CFB860D0C1F421F574B /* RecurringListViewModelTests.swift */; };
 		4E96D14CB419FBF88D0255AF /* TransactionRepositoryBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8659F94D5DFDE4FAAA042EC2 /* TransactionRepositoryBridge.swift */; };
 		5A683A4443033518B4626EBC /* DashboardData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE86F69DCCECF7511E0AFCE6 /* DashboardData.swift */; };
+		66DEC2F4980B24B814C3699D /* RecurringFrequencySwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A09C8FD7BD77A70AB1F228E /* RecurringFrequencySwift.swift */; };
 		69BEB40177C505DD7DF1D5A0 /* BudgetDetailData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FB913A0659162AD0233CE7 /* BudgetDetailData.swift */; };
 		69DB2E018425A31593C17918 /* BudgetDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1AC78C709F5F2006FC27F15 /* BudgetDetailViewModel.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
+		7FFDD6B4F8A59F7622E0EFA3 /* RecurringFormViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97F4D9C89EB53F2FE51F192 /* RecurringFormViewModel.swift */; };
+		801C7CD68A1BFEF91040B06A /* RecurringFormStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8C7974FBC3F47C42E5C006 /* RecurringFormStateTests.swift */; };
 		82DDD00375AF51A1861EA4D8 /* BudgetFormStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5D1E6E00BD912CDA0CD5FEA /* BudgetFormStateTests.swift */; };
+		85CECE700B0B97C56F69ADC8 /* UpcomingRecurringData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69D58F1378A21D43CB73BAFA /* UpcomingRecurringData.swift */; };
 		9050D02D2CF9121D1FC298BB /* ExpenseListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BD2F821671482A15CD74019 /* ExpenseListViewModelTests.swift */; };
 		9BF39A7C6A59A9291820B0F4 /* BudgetListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6648B8E01776E6632566121F /* BudgetListView.swift */; };
 		A10000000000000000000004 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* XCTest.framework */; };
+		A11F7EF4CEE29783B4C8A2CC /* RecurringTemplateItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 217F85DAC19A805334817E16 /* RecurringTemplateItem.swift */; };
 		A19372A81D6004FAD3948F57 /* BudgetWithSpendingData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D2B49B8ED8398FFEC8C191 /* BudgetWithSpendingData.swift */; };
 		A7223921C1CBF5411A9719CC /* ExpenseCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1DCF836898F3E77684A45D /* ExpenseCategory.swift */; };
 		B15273CCA400150B085D0CC6 /* BudgetFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D9AE78405D9AF3FAE91EFAE /* BudgetFormView.swift */; };
+		B65E7F56C38EEF5CB43E8567 /* RecurringListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C81954877268A4DA8724AE5B /* RecurringListViewModel.swift */; };
+		B7FCB1133C8565A2047C91F9 /* RecurringFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CDDE637007CEA319A15571 /* RecurringFormView.swift */; };
+		C7A29AEB94B44861711575BF /* MockRecurringRepositoryBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C898604A9323F486323C1EC /* MockRecurringRepositoryBridge.swift */; };
 		CB1D459851988D2ED3701B92 /* ExpenseDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0094253310022A0A5CE6F9C7 /* ExpenseDashboardView.swift */; };
+		D0B69D694ECB88A1C3E3C552 /* UpcomingRecurringSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18CB8D8EE75720A0039F99A1 /* UpcomingRecurringSection.swift */; };
 		DFD5F070AD3670BE6A4E87BA /* BudgetRepositoryBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6D4ABE8DEA564405932462 /* BudgetRepositoryBridge.swift */; };
 		EA7E0290681D7FDE55655812 /* ExpenseFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EB388E4B012258485C4AF9 /* ExpenseFormView.swift */; };
 		EE6E226D5D93E38E8883612C /* ExpenseType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693331741B7FDBA7F33C8A1C /* ExpenseType.swift */; };
@@ -64,8 +77,10 @@
 
 /* Begin PBXFileReference section */
 		0094253310022A0A5CE6F9C7 /* ExpenseDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseDashboardView.swift; sourceTree = "<group>"; };
+		0198081F1D7EBDC31934B933 /* RecurringRepositoryBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringRepositoryBridge.swift; sourceTree = "<group>"; };
 		058557BA273AAA24004C7B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		08FCC5E6ACCE2F7E64C82A27 /* RecurringFormState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringFormState.swift; sourceTree = "<group>"; };
 		0BD2F821671482A15CD74019 /* ExpenseListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseListViewModelTests.swift; sourceTree = "<group>"; };
 		18A933C92FEDB4AE00D18A1D /* DreamTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTheme.swift; sourceTree = "<group>"; };
 		18A933D22FEDB4B700D18A1D /* DreamButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamButton.swift; sourceTree = "<group>"; };
@@ -75,18 +90,25 @@
 		18A933D62FEDB4BB00D18A1D /* DreamCircularProgressIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamCircularProgressIndicator.swift; sourceTree = "<group>"; };
 		18A933D72FEDB4BC00D18A1D /* DreamEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamEmptyStateView.swift; sourceTree = "<group>"; };
 		18A933D82FEDB4BD00D18A1D /* DreamErrorStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamErrorStateView.swift; sourceTree = "<group>"; };
+		18CB8D8EE75720A0039F99A1 /* UpcomingRecurringSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpcomingRecurringSection.swift; sourceTree = "<group>"; };
 		1DB8DD6F0CB692B35860A906 /* BudgetDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetDetailView.swift; sourceTree = "<group>"; };
 		1E50146D25209E40951037B2 /* TransactionRowView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TransactionRowView.swift; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
+		217F85DAC19A805334817E16 /* RecurringTemplateItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringTemplateItem.swift; sourceTree = "<group>"; };
 		2AD6EAD2FE2468BD24F99E88 /* BudgetDetailViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetDetailViewModelTests.swift; sourceTree = "<group>"; };
 		2B63692FCB5B7DEC011E9853 /* BudgetFormState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetFormState.swift; sourceTree = "<group>"; };
 		2E1C95541CF3B04CD48B5C35 /* ExpenseListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseListView.swift; sourceTree = "<group>"; };
 		313207C0B3D50FC13F41E479 /* BudgetListViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetListViewModel.swift; sourceTree = "<group>"; };
 		3C1476E83F40E6A2F21F1DBF /* BudgetItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetItem.swift; sourceTree = "<group>"; };
+		3D8C7974FBC3F47C42E5C006 /* RecurringFormStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringFormStateTests.swift; sourceTree = "<group>"; };
 		438D5FC6DA0169E04E9F68C5 /* BudgetListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetListViewModelTests.swift; sourceTree = "<group>"; };
+		4C898604A9323F486323C1EC /* MockRecurringRepositoryBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockRecurringRepositoryBridge.swift; sourceTree = "<group>"; };
+		5B708FF982672E65064C6513 /* RecurringListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringListView.swift; sourceTree = "<group>"; };
 		5D9AE78405D9AF3FAE91EFAE /* BudgetFormView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetFormView.swift; sourceTree = "<group>"; };
 		6648B8E01776E6632566121F /* BudgetListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetListView.swift; sourceTree = "<group>"; };
 		693331741B7FDBA7F33C8A1C /* ExpenseType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseType.swift; sourceTree = "<group>"; };
+		69D58F1378A21D43CB73BAFA /* UpcomingRecurringData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpcomingRecurringData.swift; sourceTree = "<group>"; };
+		6A09C8FD7BD77A70AB1F228E /* RecurringFrequencySwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringFrequencySwift.swift; sourceTree = "<group>"; };
 		6E07CD4C0B49AEED335AD818 /* BudgetCardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetCardView.swift; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* expense-tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "expense-tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -96,12 +118,16 @@
 		91CCB5A20C241314DBED0F52 /* ExpenseFormState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseFormState.swift; sourceTree = "<group>"; };
 		A20000000000000000000001 /* iosAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000005 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = System/Library/Frameworks/XCTest.framework; sourceTree = SDKROOT; };
+		A2688CFB860D0C1F421F574B /* RecurringListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringListViewModelTests.swift; sourceTree = "<group>"; };
+		A3CDDE637007CEA319A15571 /* RecurringFormView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringFormView.swift; sourceTree = "<group>"; };
+		A97F4D9C89EB53F2FE51F192 /* RecurringFormViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringFormViewModel.swift; sourceTree = "<group>"; };
 		AB3632DC29227652001CCB65 /* Config.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		BA6037419AC2452E5728F81C /* ExpenseItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseItem.swift; sourceTree = "<group>"; };
 		BAC773C176EC4F567EBF75F9 /* ExpenseListViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseListViewModel.swift; sourceTree = "<group>"; };
 		BE86F69DCCECF7511E0AFCE6 /* DashboardData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DashboardData.swift; sourceTree = "<group>"; };
 		C2EB388E4B012258485C4AF9 /* ExpenseFormView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExpenseFormView.swift; sourceTree = "<group>"; };
 		C5D1E6E00BD912CDA0CD5FEA /* BudgetFormStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetFormStateTests.swift; sourceTree = "<group>"; };
+		C81954877268A4DA8724AE5B /* RecurringListViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecurringListViewModel.swift; sourceTree = "<group>"; };
 		CA2CC09A96967792F7762701 /* MockTransactionRepositoryBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockTransactionRepositoryBridge.swift; sourceTree = "<group>"; };
 		D1AC78C709F5F2006FC27F15 /* BudgetDetailViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetDetailViewModel.swift; sourceTree = "<group>"; };
 		D8FB913A0659162AD0233CE7 /* BudgetDetailData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BudgetDetailData.swift; sourceTree = "<group>"; };
@@ -139,6 +165,18 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		0D9DDF6D6B778A86D505A6D8 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				08FCC5E6ACCE2F7E64C82A27 /* RecurringFormState.swift */,
+				6A09C8FD7BD77A70AB1F228E /* RecurringFrequencySwift.swift */,
+				217F85DAC19A805334817E16 /* RecurringTemplateItem.swift */,
+				69D58F1378A21D43CB73BAFA /* UpcomingRecurringData.swift */,
+			);
+			name = Models;
+			path = Models;
+			sourceTree = "<group>";
+		};
 		18A933C62FEDB47D00D18A1D /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
@@ -152,6 +190,27 @@
 				18A933D82FEDB4BD00D18A1D /* DreamErrorStateView.swift */,
 			);
 			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		2350A488F8BF526FB42D2438 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A3CDDE637007CEA319A15571 /* RecurringFormView.swift */,
+				5B708FF982672E65064C6513 /* RecurringListView.swift */,
+				18CB8D8EE75720A0039F99A1 /* UpcomingRecurringSection.swift */,
+			);
+			name = Views;
+			path = Views;
+			sourceTree = "<group>";
+		};
+		3386A6C7B4F7F54B2359FF90 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A97F4D9C89EB53F2FE51F192 /* RecurringFormViewModel.swift */,
+				C81954877268A4DA8724AE5B /* RecurringListViewModel.swift */,
+			);
+			name = ViewModels;
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 		42799AB246E5F90AF97AA0EF /* Frameworks */ = {
@@ -204,8 +263,20 @@
 				058557D7273AAEEB004C7B11 /* Preview Content */,
 				A3245A27FE75B3072A35EF35 /* Expense */,
 				CB702E8290DBA57274087A1E /* Budget */,
+				79D0B74EFE620E65A3CB7308 /* Recurring */,
 			);
 			path = iosApp;
+			sourceTree = "<group>";
+		};
+		79D0B74EFE620E65A3CB7308 /* Recurring */ = {
+			isa = PBXGroup;
+			children = (
+				0D9DDF6D6B778A86D505A6D8 /* Models */,
+				3386A6C7B4F7F54B2359FF90 /* ViewModels */,
+				2350A488F8BF526FB42D2438 /* Views */,
+			);
+			name = Recurring;
+			path = Recurring;
 			sourceTree = "<group>";
 		};
 		A30000000000000000000001 /* iosAppTests */ = {
@@ -217,6 +288,9 @@
 				C5D1E6E00BD912CDA0CD5FEA /* BudgetFormStateTests.swift */,
 				438D5FC6DA0169E04E9F68C5 /* BudgetListViewModelTests.swift */,
 				EA47EB3399ACB27E6A8B82E9 /* MockBudgetRepositoryBridge.swift */,
+				4C898604A9323F486323C1EC /* MockRecurringRepositoryBridge.swift */,
+				3D8C7974FBC3F47C42E5C006 /* RecurringFormStateTests.swift */,
+				A2688CFB860D0C1F421F574B /* RecurringListViewModelTests.swift */,
 			);
 			path = iosAppTests;
 			sourceTree = "<group>";
@@ -316,6 +390,7 @@
 				FFFF00010000000000000001 /* AppDependencies.swift */,
 				8659F94D5DFDE4FAAA042EC2 /* TransactionRepositoryBridge.swift */,
 				FF6D4ABE8DEA564405932462 /* BudgetRepositoryBridge.swift */,
+				0198081F1D7EBDC31934B933 /* RecurringRepositoryBridge.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -469,6 +544,16 @@
 				9BF39A7C6A59A9291820B0F4 /* BudgetListView.swift in Sources */,
 				DFD5F070AD3670BE6A4E87BA /* BudgetRepositoryBridge.swift in Sources */,
 				69BEB40177C505DD7DF1D5A0 /* BudgetDetailData.swift in Sources */,
+				346594EFE7A36EC44F1B1C57 /* RecurringRepositoryBridge.swift in Sources */,
+				47A8E7D1AE803E8CB917AF09 /* RecurringFormState.swift in Sources */,
+				66DEC2F4980B24B814C3699D /* RecurringFrequencySwift.swift in Sources */,
+				A11F7EF4CEE29783B4C8A2CC /* RecurringTemplateItem.swift in Sources */,
+				85CECE700B0B97C56F69ADC8 /* UpcomingRecurringData.swift in Sources */,
+				7FFDD6B4F8A59F7622E0EFA3 /* RecurringFormViewModel.swift in Sources */,
+				B65E7F56C38EEF5CB43E8567 /* RecurringListViewModel.swift in Sources */,
+				B7FCB1133C8565A2047C91F9 /* RecurringFormView.swift in Sources */,
+				46803E4D4F77809D3FA2156B /* RecurringListView.swift in Sources */,
+				D0B69D694ECB88A1C3E3C552 /* UpcomingRecurringSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -482,6 +567,9 @@
 				82DDD00375AF51A1861EA4D8 /* BudgetFormStateTests.swift in Sources */,
 				154B5014A39E4BD9FA3C65BA /* BudgetListViewModelTests.swift in Sources */,
 				0C3D5EB43A5729201EEDB855 /* MockBudgetRepositoryBridge.swift in Sources */,
+				C7A29AEB94B44861711575BF /* MockRecurringRepositoryBridge.swift in Sources */,
+				801C7CD68A1BFEF91040B06A /* RecurringFormStateTests.swift in Sources */,
+				482F4016E8B99170C7E3DD75 /* RecurringListViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

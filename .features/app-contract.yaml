@@ -10,3 +10,4 @@ backend:
 features:
   - expense
   - budget
+  - recurring-transactions

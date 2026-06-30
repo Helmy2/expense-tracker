@@ -15,4 +15,5 @@ sealed interface ExpenseAction {
     data class DeleteTransaction(val id: String) : ExpenseAction
     data object ToggleFormSheet : ExpenseAction
     data object DismissFormSheet : ExpenseAction
+    data object NavigateToRecurringList : ExpenseAction
 }

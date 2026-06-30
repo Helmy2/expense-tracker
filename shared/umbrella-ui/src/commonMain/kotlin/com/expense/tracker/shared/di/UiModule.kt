@@ -3,6 +3,7 @@ package com.expense.tracker.shared.di
 import com.expense.tracker.feature.budget.impl.di.budgetUiModule
 import com.expense.tracker.feature.expense.api.navigation.ExpenseRoute
 import com.expense.tracker.feature.expense.impl.di.expenseUiModule
+import com.expense.tracker.feature.recurring.impl.di.recurringUiModule
 import com.expense.tracker.shared.core.data.database.AppDatabaseFactory
 import com.expense.tracker.shared.navigation.Navigator
 import org.koin.core.context.startKoin
@@ -27,6 +28,7 @@ fun initKoin(
         appDataModule(databaseFactory, appContext),
         expenseUiModule,
         budgetUiModule,
+        recurringUiModule,
         navigatorModule,
     )
 

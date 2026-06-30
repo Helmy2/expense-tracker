@@ -6,9 +6,11 @@ final class AppDependencies {
 
     let expenseBridge: any TransactionRepositoryBridge
     let budgetBridge: any BudgetRepositoryBridge
+    let recurringBridge: any RecurringRepositoryBridge
 
     private init() {
         expenseBridge = SharedTransactionRepositoryBridge()
         budgetBridge = SharedBudgetRepositoryBridge()
+        recurringBridge = SharedRecurringRepositoryBridge()
     }
 }

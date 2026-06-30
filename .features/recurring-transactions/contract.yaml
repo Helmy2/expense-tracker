@@ -1,0 +1,270 @@
+feature: recurring-transactions
+goal: >
+  Users can create scheduled transactions that repeat automatically — for
+  example, "Rent $1500 on the 1st of every month". Supports daily, weekly,
+  monthly, and yearly frequencies. On app launch, any recurring templates
+  that are due today are automatically created as regular transactions so
+  the user sees them in their history. The recurring screen shows a list
+  of all recurring templates, each displaying the amount, category,
+  frequency, and next due date. Users can pause or resume a recurring
+  template with a toggle. They can create, edit, or delete templates. Show
+  upcoming recurring transactions on the main expense dashboard.
+
+parentContract: app-contract.yaml
+
+timeSensitiveBehavior:
+  usesTimeProvider: true
+  details: >
+    RecurringTemplate uses startDateMillis and lastGeneratedDateMillis
+    to determine when the next transaction is due. Frequency computation
+    uses TimeProvider.today() and TimeProvider.nowMillis() for period
+    calculation. On app init, #processDueRecurringTransactions() scans
+    all non-paused templates, computes due dates from startDateMillis to
+    today, and creates TransactionEntity records via TransactionDao for
+    each missed or current occurrence. The nextDueDateMillis is computed
+    from startDateMillis + frequency * number_of_periods_elapsed.
+
+entities:
+  - name: RecurringTemplate
+    fields:
+      - name: id
+        type: String
+        description: Unique identifier
+      - name: amount
+        type: Double
+        description: Transaction amount
+      - name: type
+        type: TransactionType
+        values: [INCOME, EXPENSE]
+        description: Reuses expense TransactionType enum
+      - name: category
+        type: TransactionCategory
+        values: [FOOD, RENT, SALARY, ENTERTAINMENT, TRANSPORTATION, UTILITIES, SHOPPING, HEALTHCARE, EDUCATION, OTHER]
+        description: Reuses expense TransactionCategory enum
+      - name: note
+        type: String
+        description: Optional note
+      - name: frequency
+        type: RecurringFrequency
+        values: [DAILY, WEEKLY, MONTHLY, YEARLY]
+        description: How often the recurring transaction repeats
+      - name: startDateMillis
+        type: Long
+        description: The date the recurring schedule starts (set as time at start of day)
+      - name: endDateMillis
+        type: Long?
+        description: Optional end date after which the recurring stops (time at end of day)
+      - name: isPaused
+        type: Boolean
+        description: Whether the recurring template is paused (default false)
+      - name: lastGeneratedDateMillis
+        type: Long?
+        description: >
+          The most recent date (start-of-day millis) for which a transaction
+          was automatically generated. Used to prevent duplicate generation.
+      - name: createdAtMillis
+        type: Long
+        description: When the template was created
+      - name: updatedAtMillis
+        type: Long
+        description: When the template was last updated
+
+  - name: RecurringFrequency
+    type: enum
+    values:
+      - DAILY: "Every day"
+      - WEEKLY: "Every 7 days"
+      - MONTHLY: "Every month (same day of month)"
+      - YEARLY: "Every year (same day and month)"
+
+  - name: UpcomingRecurring
+    description: Computed model for upcoming occurrences shown on dashboard
+    fields:
+      - name: templateId
+        type: String
+      - name: amount
+        type: Double
+      - name: type
+        type: TransactionType
+      - name: category
+        type: TransactionCategory
+      - name: note
+        type: String
+      - name: frequency
+        type: RecurringFrequency
+      - name: nextDueDateMillis
+        type: Long
+        description: Millis for the upcoming due date
+
+actions:
+  - name: LoadTemplates
+    description: Load all recurring templates
+    inputs: none
+    outputs: List<RecurringTemplate>
+
+  - name: CreateTemplate
+    description: Create a new recurring template
+    inputs:
+      - amount: Double
+      - type: TransactionType
+      - category: TransactionCategory
+      - note: String
+      - frequency: RecurringFrequency
+      - startDateMillis: Long
+      - endDateMillis: Long?
+    outputs: RecurringTemplate
+
+  - name: UpdateTemplate
+    description: Update an existing recurring template
+    inputs:
+      - id: String
+      - amount: Double
+      - type: TransactionType
+      - category: TransactionCategory
+      - note: String
+      - frequency: RecurringFrequency
+      - startDateMillis: Long
+      - endDateMillis: Long?
+    outputs: RecurringTemplate
+
+  - name: DeleteTemplate
+    description: Delete a recurring template
+    inputs:
+      - id: String
+    outputs: Unit
+
+  - name: TogglePause
+    description: Toggle pause/resume for a recurring template
+    inputs:
+      - id: String
+    outputs: RecurringTemplate
+
+  - name: ProcessDueRecurring
+    description: >
+      Called at app startup. Scans all non-paused templates, computes due
+      occurrences from startDateMillis to today, creates TransactionEntity
+      records for each (via TransactionDao), and updates
+      lastGeneratedDateMillis.
+    inputs: none
+    outputs: Int (number of transactions created)
+
+  - name: LoadUpcoming
+    description: >
+      Load upcoming recurring transactions for the dashboard (next 5
+      occurrences across all templates).
+    inputs: none
+    outputs: List<UpcomingRecurring>
+
+screens:
+  - name: RecurringList
+    description: >
+      Lists all recurring templates. Each item shows amount (with +/- prefix),
+      category, frequency label, and next due date. Each item has a pause/resume
+      toggle. FAB or header button to add new template. Delete via swipe or
+      context menu. Accessible from main expense screen via a "Recurring" button.
+    states:
+      - Loading: Full-screen centered CircularProgressIndicator
+      - Empty: Empty state card with message and create button
+      - Content: List of RecurringTemplate items with pause toggle
+      - Error: Error card with retry button
+
+  - name: RecurringForm
+    description: >
+      Form for creating or editing a recurring template. Fields: amount, type
+      (INCOME/EXPENSE segmented control), category (dropdown), note, frequency
+      (segmented control: Daily/Weekly/Monthly/Yearly), start date (date
+      picker), end date (optional, date picker with clear option). Save button
+      at bottom. Validation: amount required and > 0.
+    states:
+      - Create: Empty form for new template
+      - Edit: Pre-filled form for existing template
+    layout:
+      - Amount: decimal number input
+      - Type: segmented control (Income/Expense)
+      - Category: dropdown selector
+      - Note: text input (optional)
+      - Frequency: segmented control (Daily/Weekly/Monthly/Yearly)
+      - Start Date: date picker field
+      - End Date: optional date picker field with clear to remove
+      - Save button
+
+designExpectations:
+  - useDesignSystemComponents: true
+  - listLayout: >
+      Each recurring template item shows: formatted amount (leading), category
+      and frequency (subtitle), next due date (trailing sub-text), pause/resume
+      toggle (trailing). Swipe to delete or use a context menu.
+  - formLayout: >
+      Compact single-column form. Amount, type, category, note, frequency,
+      start date, end date (optional). Save button at the bottom. Use Dream
+      design system components.
+  - pauseToggle: >
+      Use a Switch or Toggle component. When paused, the template is dimmed
+      or shown with a "Paused" label. Tapping the toggle resumes it.
+  - dashboardUpcoming: >
+      On the main expense screen dashboard, show a small section titled
+      "Upcoming Recurring" with up to 3 upcoming items, each showing
+      amount, category, and next due date.
+  - navigation: >
+      "Recurring" button on the main expense screen top bar or as a list
+      item that navigates to the recurring list screen.
+
+storage:
+  strategy: shared-room-database
+  owner: shared/core/data
+  tables:
+    - name: recurring_templates
+      owner: feature/recurring-transactions
+
+crossFeatureReuse:
+  - feature: recurring-transactions
+    reuse:
+      - module: feature/expense/domain
+        reason: >
+          Recurring templates reuse TransactionCategory and TransactionType
+          enums from feature/expense/domain. This is a value-object reuse
+          (enums with no behavior), acceptable per §32.2.
+        tracked: true
+      - module: shared/core/data (TransactionDao, TransactionEntity)
+        reason: >
+          The processDueRecurringTransactions() function creates TransactionEntity
+          records directly via TransactionDao when a recurring template is due.
+          This is a documented data-layer cross-feature coupling where
+          feature/recurring-transactions/data depends on shared/core/data for
+          transaction persistence. This is acceptable because both features
+          share the same AppDatabase and table.
+        tracked: true
+    dashboardReuse:
+      - module: feature/expense/impl
+        reason: >
+          The expense dashboard (feature/expense/impl) needs to display upcoming
+          recurring transactions. It reads from RecurringTemplateRepository
+          (recurring/domain), which is allowed via the Aggregator Exception
+          [dep-7] — dashboard may depend on other features' domain only.
+        tracked: true
+
+requiredTests:
+  domain:
+    - RecurringTemplate model construction and field validation
+    - RecurringFrequency enum values
+    - UpcomingRecurring model construction
+    - Next due date computation logic
+    - Repository contract tests (load, create, update, delete, toggle, process)
+
+  data:
+    - RecurringTemplateEntity to/from domain mapping
+    - RecurringTemplateDao operations (getAll, getById, insert, update, delete)
+    - RoomRecurringTemplateRepository implementation tests
+    - Due transaction processing logic with fake DAO
+    - Upcoming occurrences computation
+
+  presentation:
+    - RecurringListViewModel loading states (Loading, Empty, Content, Error)
+    - RecurringListViewModel create, delete, toggle pause
+    - RecurringFormViewModel validation and save
+    - PresentationMapper tests
+
+  ios:
+    - RecurringListViewModel iOS native tests
+    - RecurringFormState native tests
+    - RecurringRepositoryBridge tests

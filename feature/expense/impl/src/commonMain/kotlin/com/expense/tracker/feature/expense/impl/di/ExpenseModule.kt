@@ -5,6 +5,8 @@ import com.expense.tracker.feature.expense.api.navigation.ExpenseRoute
 import com.expense.tracker.feature.expense.impl.ExpensePresentationMapper
 import com.expense.tracker.feature.expense.impl.ExpenseScreen
 import com.expense.tracker.feature.expense.impl.ExpenseViewModel
+import com.expense.tracker.feature.recurring.api.navigation.RecurringFormRoute
+import com.expense.tracker.feature.recurring.api.navigation.RecurringListRoute
 import com.expense.tracker.shared.navigation.Navigator
 import org.koin.compose.koinInject
 import org.koin.core.annotation.KoinExperimentalAPI
@@ -22,6 +24,8 @@ val expenseUiModule = module {
         ExpenseScreen(
             onNavigateBack = { navigator.goBack() },
             onNavigateToBudgets = { navigator.goTo(BudgetRoute) },
+            onNavigateToRecurring = { navigator.goTo(RecurringListRoute) },
+            onNavigateToRecurringEdit = { templateId -> navigator.goTo(RecurringFormRoute(templateId)) },
         )
     }
 }

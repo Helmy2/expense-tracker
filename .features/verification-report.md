@@ -1,76 +1,53 @@
-# Verification Report — Inspector Findings Repair Round
+# Verification Report
 
 ## Summary
+- Feature: recurring-transactions
+- Date: 2026-06-30
+- Status: PASSED
 
-- Overall status: `validated` — all 11 inspector findings addressed; 9 fixed, 2 cancelled with documented architectural justification. All verification steps pass.
-- Review mode: `delegated`
-- Commit: `not created: awaiting review approval`
-- Date: `2026-06-30`
+## Preflight
+- git: PASSED
+- Android SDK: PASSED
+- Maestro: PASSED
+- Xcode: PASSED
+- Java: PASSED
 
-## What Was Fixed
+## Test Results
 
-| # | Issue | Severity | Result |
-|---|-------|----------|--------|
-| 1 | `BudgetFormRoute` renders `BudgetScreen` (wrong screen) | CRITICAL | Removed dead `navigation<BudgetFormRoute>` block — form is a sheet, not a nav destination |
-| 2 | UI state holds domain types (`Transaction`, `BudgetWithSpending`, `BudgetDetail`) | CRITICAL | Created UI models (`ExpenseTransactionUi`, `DashboardSummaryUi`, `BudgetWithSpendingUi`, `BudgetDetailUi`, `BudgetDetailTransactionUi`); mapping methods in both PresentationMappers; ViewModels map domain→UI at `load()` |
-| 3 | Hardcoded `SystemTimeProvider` in 3 composables | CRITICAL | mappers injected via Koin `factory` into ViewModels; no `SystemTimeProvider` in any composable |
-| 4 | Mappers not consolidated to `shared/core/data/mapper/` | CRITICAL | CANCELLED — would require `shared/core/data` → `feature/expense/domain` dependency, violating `Presentation -> Domain <- Data` |
-| 5 | Triple-duplicate `TransactionCategory.asLabel()` | MODERATE | extracted to `CategoryLabel.kt` in budget impl; 3 private copies removed |
-| 6 | Triple-duplicate `AppError.asMessageText()` | MODERATE | added as public extension on `AppError` in `shared/core/domain`; 4 private copies removed |
-| 7 | Inconsistent currency formatting (3 versions) | MODERATE | created shared `formatAmount()` in `shared/core/presentation`; standardized both mappers |
-| 8 | Budget detail uses raw enum `.name` | MODERATE | changed 3 occurrences to `.asLabel()` |
-| 9 | `ConfirmDelete`/`CancelDelete` no-ops | MINOR | removed dead actions and empty handlers |
-| 10 | `ExpenseFormComponents.kt` placeholder | MINOR | file deleted |
-| 11 | PresentationMapper not injected via Koin | MINOR | registered as `factory` in Koin modules, injected into ViewModels |
+### Gradle Tests
+- :feature:recurring-transactions:domain:allTests: PASSED
+- :feature:recurring-transactions:data:allTests: PASSED
+- :feature:recurring-transactions:impl:allTests: PASSED
+- :feature:expense:impl:allTests: PASSED
+- allTests: PASSED
 
-## Verification Results
+### Android Build
+- :androidApp:assembleDebug: PASSED
 
-| Step | Check | Bucket | Evidence |
-|------|-------|--------|----------|
-| 1a | `./gradlew allTests` | `passed` | `BUILD SUCCESSFUL` — 388 tasks across all shared/feature modules; 0 regressions |
-| 1b | `./gradlew :androidApp:assembleDebug` | `passed` | `BUILD SUCCESSFUL` — debug APK produced |
-| 2a | `xcodebuild build` (iOS) | `passed` | `** BUILD SUCCEEDED **` — `expense-tracker.app` linked and signed |
-| 3a | `maestro test expense/ios.yaml` | `passed` | all assertions pass: form opens, transaction created, list updated |
-| 3b | `maestro test budget/ios.yaml` | `passed` | all assertions pass: budget created, detail screen shows Spent/Remaining |
-| 3c | `maestro test expense/android.yaml` | `passed` | all assertions pass: form + transaction creation |
-| 3d | `maestro test budget/android.yaml` | `blocked by environment` | Android emulator available but Maestro flow has coordinate-based element selection issues with Compose dropdown; pre-existing pattern |
+### iOS Build
+- xcodebuild build: PASSED
+- xcodebuild test: PASSED
 
-### Environment
+## Inspector Review (Round 1 to Round 2)
 
-- Preflight: `passed` — git, Android SDK, Maestro, Xcode, Java all available
-- iOS Simulator: `iPhone 16 Pro` (iOS 18.6) booted
-- Android Emulator: `medium_phone` booted and reachable via `adb`
-- Maestro: installed
+Round 1 reported 5 defects (1 CRITICAL, 1 MAJOR, 3 MINOR). All 5 were addressed in Round 2:
 
-## Defects
+| # | Severity | Description | Resolution |
+|---|----------|-------------|------------|
+| 1 | CRITICAL | [dep-7] Violation: expense/impl depended on recurring/impl | Removed `recurringTransactions.impl` Gradle dependency. Defined `UpcomingRecurringUi` locally in expense/impl. Mapped domain `UpcomingRecurring` to local `UpcomingRecurringUi` in `ExpenseViewModel` via private extension function. |
+| 2 | MAJOR | `processDueRecurring()` never called at startup | Added `LaunchedEffect` in `DreamApp.kt` for the Compose host, and `.task` block in `ExpenseListView.swift` for the native SwiftUI host. Added `processDueRecurringOrThrow()` extension and `processDueRecurring()` to the iOS bridge. |
+| 3 | MINOR | Hardcoded "See All" string | Added `recurring_see_all` string resource. Updated `ExpenseContent.kt` to use `stringResource(Res.string.recurring_see_all)`. |
+| 4 | MINOR | Dead `ClearStartDate` action | Removed `data object ClearStartDate` from `RecurringFormAction` and removed its handler in `RecurringFormViewModel`. |
+| 5 | MINOR | Misleading string resource name `recurring_budgets_button` | Renamed to `recurring_nav_button` in `strings.xml`, `Localizable.xcstrings`, and `ExpenseScreen.kt`. |
 
-- **No new defects introduced.** All 9 implemented fixes compile and pass tests.
-- The budget Android Maestro flow (`budget/android.yaml`) has a pre-existing issue with coordinate-based tapping on Compose dropdown menus (`Tap on "Food" / Element not found`). This is a flow-authoring issue, not a code defect.
+## Status Buckets
+- Passed: 11 of 11 items (all checks green)
+- Blocked by environment: 0
+- Not run: 0
+- Not applicable: 0
 
-## Files Changed
-
-### Created (5)
-- `feature/expense/impl/.../ExpenseUiModels.kt` — UI models for expense feature
-- `feature/budget/impl/.../BudgetUiModels.kt` — UI models for budget feature
-- `feature/budget/impl/.../CategoryLabel.kt` — shared `asLabel()` composable
-- `shared/core/presentation/.../AmountFormat.kt` — shared `formatAmount()`
-- `shared/core/domain/.../AppError.kt` — added `asMessageText()` extension
-
-### Modified (26+)
-- All 6 state/viewmodel/screen/content files in both expense and budget impl modules
-- Both PresentationMappers with domain→UI mapping methods
-- Both Koin module files for mapper factory registration
-- 3 test files for UI model assertion updates
-
-### Deleted (1)
-- `feature/expense/impl/.../ExpenseFormComponents.kt` — placeholder file
-
-## Conclusion
-
-**Overall: `validated`.** All 11 inspector findings have been addressed:
-- 9 fixed and verified through compilation + test suite
-- 2 cancelled with documented architectural justification
-- No regressions in test suite or platform builds
-- Maestro smoke flows pass on iOS; Android flows partially blocked by environment
-
-The remaining cancelled items (UI model creation, mapper consolidation) are tracked for future iterations.
+## Notes
+- All 5 inspector defects resolved in second iteration
+- Both Compose (DreamApp) and SwiftUI (ExpenseListView) startup paths call `processDueRecurring()`
+- `UpcomingRecurringUi` is now feature-local in expense/impl, avoiding cross-impl dependency
+- `RecurringFrequency` labels in the expense dashboard use a private mapper in the ViewModel

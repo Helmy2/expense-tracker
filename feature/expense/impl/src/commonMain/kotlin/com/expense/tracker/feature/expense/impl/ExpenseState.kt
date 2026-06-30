@@ -13,6 +13,7 @@ data class ExpenseState(
     val categoryMenuExpanded: Boolean = false,
     val dashboard: DashboardSummaryUi = DashboardSummaryUi("$0.00", "$0.00", "$0.00"),
     val showBottomSheet: Boolean = false,
+    val upcomingRecurring: List<UpcomingRecurringUi> = emptyList(),
 )
 
 sealed interface ExpenseContentState {

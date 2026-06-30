@@ -2,6 +2,9 @@ import SwiftUI
 
 struct ExpenseListView: View {
     @State private var viewModel = ExpenseListViewModel()
+    @State private var upcomingItems: [UpcomingRecurringData] = []
+    @State private var showRecurringList = false
+    @State private var selectedRecurringTemplateId: String?
     @Environment(\.dreamColors) private var colors
 
     var body: some View {
@@ -34,10 +37,18 @@ struct ExpenseListView: View {
             .navigationTitle("expense_title")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    NavigationLink {
-                        BudgetListView()
-                    } label: {
-                        Text("budget_list_title")
+                    HStack(spacing: DreamSpacing.sm) {
+                        NavigationLink {
+                            BudgetListView()
+                        } label: {
+                            Text("budget_list_title")
+                        }
+
+                        NavigationLink {
+                            RecurringListView()
+                        } label: {
+                            Text("recurring_nav_button")
+                        }
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -70,16 +81,43 @@ struct ExpenseListView: View {
             } message: {
                 Text("expense_delete_message")
             }
-            .task { await viewModel.load() }
+            .task {
+                // Process due recurring transactions on app launch
+                try? await AppDependencies.shared.recurringBridge.processDueRecurring()
+                await viewModel.load()
+            }
             .refreshable { await viewModel.load(force: true) }
+            .navigationDestination(isPresented: $showRecurringList) {
+                RecurringListView()
+            }
+            .navigationDestination(item: $selectedRecurringTemplateId) { templateId in
+                RecurringFormView(
+                    templateId: templateId,
+                    onDismiss: { Task { await loadUpcoming() } }
+                )
+            }
         }
         .dreamTheme()
+        .task { await loadUpcoming() }
     }
 
     private func listContent(_ items: [ExpenseItem]) -> some View {
         List {
             ExpenseDashboardView(dashboard: viewModel.dashboard)
                 .listRowSeparator(.hidden)
+
+            // Upcoming Recurring Section
+            if !upcomingItems.isEmpty {
+                UpcomingRecurringSection(
+                    upcomingItems: upcomingItems,
+                    onSeeAll: { showRecurringList = true },
+                    onItemTap: { templateId in
+                        selectedRecurringTemplateId = templateId
+                    }
+                )
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+            }
 
             Section("expense_transactions") {
                 ForEach(items) { transaction in
@@ -94,6 +132,14 @@ struct ExpenseListView: View {
             }
         }
         .listStyle(.plain)
+    }
+
+    private func loadUpcoming() async {
+        do {
+            upcomingItems = try await AppDependencies.shared.recurringBridge.loadUpcoming(count: 5)
+        } catch {
+            upcomingItems = []
+        }
     }
 }
 

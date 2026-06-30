@@ -5,6 +5,9 @@ import com.expense.tracker.feature.expense.domain.model.Transaction
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
+import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
+import com.expense.tracker.feature.recurring.domain.model.RecurringTemplate
+import com.expense.tracker.feature.recurring.domain.repository.RecurringTemplateRepository
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.testing.FakeTimeProvider
@@ -28,6 +31,33 @@ import kotlin.test.assertTrue
 private fun fakeMapper(): ExpensePresentationMapper =
     ExpensePresentationMapper(FakeTimeProvider())
 
+private fun fakeRecurringRepository(): RecurringTemplateRepository =
+    object : RecurringTemplateRepository {
+        override suspend fun loadTemplates(): Result<List<RecurringTemplate>> = Result.Success(emptyList())
+        override suspend fun loadTemplateById(id: String): Result<RecurringTemplate?> = Result.Success(null)
+        override suspend fun createTemplate(
+            amount: Double, type: com.expense.tracker.feature.expense.domain.model.TransactionType,
+            category: com.expense.tracker.feature.expense.domain.model.TransactionCategory, note: String,
+            frequency: RecurringFrequency, startDateMillis: Long, endDateMillis: Long?,
+        ): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, com.expense.tracker.feature.expense.domain.model.TransactionType.EXPENSE, com.expense.tracker.feature.expense.domain.model.TransactionCategory.OTHER, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
+        override suspend fun updateTemplate(id: String, amount: Double, type: com.expense.tracker.feature.expense.domain.model.TransactionType, category: com.expense.tracker.feature.expense.domain.model.TransactionCategory, note: String, frequency: RecurringFrequency, startDateMillis: Long, endDateMillis: Long?): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, com.expense.tracker.feature.expense.domain.model.TransactionType.EXPENSE, com.expense.tracker.feature.expense.domain.model.TransactionCategory.OTHER, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
+        override suspend fun deleteTemplate(id: String): Result<Unit> = Result.Success(Unit)
+        override suspend fun togglePause(id: String): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, com.expense.tracker.feature.expense.domain.model.TransactionType.EXPENSE, com.expense.tracker.feature.expense.domain.model.TransactionCategory.OTHER, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
+        override suspend fun processDueRecurring(): Result<Int> = Result.Success(0)
+        override suspend fun loadUpcoming(count: Int): Result<List<com.expense.tracker.feature.recurring.domain.model.UpcomingRecurring>> = Result.Success(emptyList())
+    }
+
+private fun createViewModel(
+    repository: TransactionRepository,
+    timeProvider: FakeTimeProvider = FakeTimeProvider(),
+    mapper: ExpensePresentationMapper = fakeMapper(),
+): ExpenseViewModel = ExpenseViewModel(
+    repository = repository,
+    recurringRepository = fakeRecurringRepository(),
+    timeProvider = timeProvider,
+    mapper = mapper,
+)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExpenseViewModelTest {
     private val mainDispatcher = StandardTestDispatcher()
@@ -45,11 +75,7 @@ class ExpenseViewModelTest {
     @Test
     fun startsInLoadingState() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = ExpenseViewModel(
-            repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
-        )
+        val viewModel = createViewModel(repository = repository)
 
         assertIs<ExpenseContentState.Loading>(viewModel.state.value.contentState)
     }
@@ -57,11 +83,7 @@ class ExpenseViewModelTest {
     @Test
     fun loadWithEmptyListTransitionsToEmpty() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = ExpenseViewModel(
-            repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
-        )
+        val viewModel = createViewModel(repository = repository)
 
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -72,11 +94,7 @@ class ExpenseViewModelTest {
     @Test
     fun loadWithTransactionsTransitionsToContent() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = ExpenseViewModel(
-            repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
-        )
+        val viewModel = createViewModel(repository = repository)
 
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -88,11 +106,7 @@ class ExpenseViewModelTest {
     @Test
     fun loadComputesDashboard() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = ExpenseViewModel(
-            repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
-        )
+        val viewModel = createViewModel(repository = repository)
 
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -106,10 +120,9 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionWithValidInputAddsAndReloads() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
-            mapper = fakeMapper(),
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -129,10 +142,10 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionEmitsSavedEvent() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
-            mapper = fakeMapper(),
+            
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -151,10 +164,10 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionWithInvalidAmountDoesNotCallRepository() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("0"))
@@ -167,10 +180,10 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionWithNegativeAmountDoesNotCallRepository() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("-5"))
@@ -183,10 +196,10 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionWithNonNumericAmountDoesNotCallRepository() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("abc"))
@@ -199,10 +212,10 @@ class ExpenseViewModelTest {
     @Test
     fun deleteTransactionRemovesAndReloads() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -215,10 +228,10 @@ class ExpenseViewModelTest {
 
     @Test
     fun typeSelectionUpdatesState() = runTest(mainDispatcher) {
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.TypeSelected(TransactionType.INCOME))
@@ -232,10 +245,10 @@ class ExpenseViewModelTest {
 
     @Test
     fun categorySelectionUpdatesStateAndClosesMenu() = runTest(mainDispatcher) {
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.ToggleCategoryMenu)
@@ -250,10 +263,10 @@ class ExpenseViewModelTest {
 
     @Test
     fun amountChangedUpdatesState() = runTest(mainDispatcher) {
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("42.50"))
@@ -263,10 +276,10 @@ class ExpenseViewModelTest {
 
     @Test
     fun noteChangedUpdatesState() = runTest(mainDispatcher) {
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.NoteChanged("Groceries"))
@@ -277,10 +290,10 @@ class ExpenseViewModelTest {
     @Test
     fun dashboardRecomputesAfterAdd() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
-            mapper = fakeMapper(),
+            
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -300,10 +313,10 @@ class ExpenseViewModelTest {
 
     @Test
     fun toggleFormSheetSetsShowBottomSheetToTrue() = runTest(mainDispatcher) {
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         assertEquals(false, viewModel.state.value.showBottomSheet)
@@ -316,10 +329,10 @@ class ExpenseViewModelTest {
 
     @Test
     fun dismissFormSheetSetsShowBottomSheetToFalse() = runTest(mainDispatcher) {
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.ToggleFormSheet)
@@ -334,10 +347,10 @@ class ExpenseViewModelTest {
 
     @Test
     fun toggleFormSheetTwiceToggles() = runTest(mainDispatcher) {
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         assertEquals(false, viewModel.state.value.showBottomSheet)
@@ -352,10 +365,10 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionClosesBottomSheet() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
-            mapper = fakeMapper(),
+            
         )
 
         viewModel.onAction(ExpenseAction.ToggleFormSheet)
@@ -374,10 +387,10 @@ class ExpenseViewModelTest {
         val repository = mock<TransactionRepository> {
             everySuspend { loadTransactions() } returns Result.Failure(AppError.Message("Database error"))
         }
-        val viewModel = ExpenseViewModel(
+        val viewModel = createViewModel(
             repository = repository,
-            timeProvider = FakeTimeProvider(),
-            mapper = fakeMapper(),
+            
+            
         )
 
         viewModel.onAction(ExpenseAction.Load)

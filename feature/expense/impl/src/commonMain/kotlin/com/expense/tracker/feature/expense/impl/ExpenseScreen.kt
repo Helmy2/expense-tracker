@@ -20,6 +20,7 @@ import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.expense_budgets_button
 import com.expense.tracker.shared.core.strings.expense_saved_snackbar
 import com.expense.tracker.shared.core.strings.expense_title
+import com.expense.tracker.shared.core.strings.recurring_nav_button
 import com.expense.tracker.shared.designsystem.components.Button
 import com.expense.tracker.shared.designsystem.components.ButtonVariant
 import com.expense.tracker.shared.designsystem.components.IconButton
@@ -33,6 +34,8 @@ fun ExpenseScreen(
     viewModel: ExpenseViewModel = koinViewModel(),
     onNavigateBack: () -> Unit = {},
     onNavigateToBudgets: () -> Unit = {},
+    onNavigateToRecurring: () -> Unit = {},
+    onNavigateToRecurringEdit: (String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -64,6 +67,11 @@ fun ExpenseScreen(
                 navigationIcon = {},
                 actions = {
                     Button(
+                        text = stringResource(Res.string.recurring_nav_button),
+                        onClick = onNavigateToRecurring,
+                        variant = ButtonVariant.Tertiary,
+                    )
+                    Button(
                         text = stringResource(Res.string.expense_budgets_button),
                         onClick = onNavigateToBudgets,
                         variant = ButtonVariant.Tertiary,
@@ -83,6 +91,8 @@ fun ExpenseScreen(
             state = state,
             onAction = { viewModel.onAction(it) },
             modifier = Modifier.padding(innerPadding),
+            onNavigateToRecurringList = onNavigateToRecurring,
+            onNavigateToRecurringEdit = onNavigateToRecurringEdit,
         )
     }
 }

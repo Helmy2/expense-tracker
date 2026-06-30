@@ -15,3 +15,12 @@ data class DashboardSummaryUi(
     val formattedIncome: String,
     val formattedExpenses: String,
 )
+
+data class UpcomingRecurringUi(
+    val templateId: String,
+    val formattedAmount: String,
+    val category: TransactionCategory,
+    val frequencyLabel: String,
+    val nextDueDateFormatted: String,
+    val isIncome: Boolean,
+)
