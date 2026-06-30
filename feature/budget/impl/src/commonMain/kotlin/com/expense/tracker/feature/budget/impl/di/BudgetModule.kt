@@ -5,6 +5,7 @@ import com.expense.tracker.feature.budget.api.navigation.BudgetFormRoute
 import com.expense.tracker.feature.budget.api.navigation.BudgetRoute
 import com.expense.tracker.feature.budget.impl.BudgetDetailScreen
 import com.expense.tracker.feature.budget.impl.BudgetDetailViewModel
+import com.expense.tracker.feature.budget.impl.BudgetPresentationMapper
 import com.expense.tracker.feature.budget.impl.BudgetScreen
 import com.expense.tracker.feature.budget.impl.BudgetViewModel
 import com.expense.tracker.shared.navigation.Navigator
@@ -18,6 +19,7 @@ import org.koin.plugin.module.dsl.viewModel
 val budgetUiModule = module {
     viewModel<BudgetViewModel>()
     viewModel<BudgetDetailViewModel>()
+    factory { BudgetPresentationMapper(get()) }
 
     navigation<BudgetRoute> {
         val navigator = koinInject<Navigator>()
@@ -34,16 +36,6 @@ val budgetUiModule = module {
         BudgetDetailScreen(
             budgetId = route.budgetId,
             onNavigateBack = { navigator.goBack() },
-            onNavigateToEdit = { budgetId -> navigator.goTo(BudgetFormRoute(budgetId)) },
-        )
-    }
-
-    navigation<BudgetFormRoute> {
-        val navigator = koinInject<Navigator>()
-        BudgetScreen(
-            onNavigateBack = { navigator.goBack() },
-            onNavigateToDetail = { budgetId -> navigator.goTo(BudgetDetailRoute(budgetId)) },
-            onNavigateToCreate = { navigator.goTo(BudgetFormRoute()) },
             onNavigateToEdit = { budgetId -> navigator.goTo(BudgetFormRoute(budgetId)) },
         )
     }

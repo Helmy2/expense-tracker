@@ -15,12 +15,19 @@ appId: com.expense.tracker.android
 - waitForAnimationToEnd
 # Open the category dropdown by tapping the category field area
 - tapOn:
-    point: "50%,35%"
-- tapOn: "Food"
+    point: "50%,28%"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%,39%"
 # Enter a monthly limit
-- tapOn: "Enter amount"
-- inputText: "500.00"
+- tapOn:
+    point: "50%,55%"
+- inputText: "500"
 - pressKey: Back
+- waitForAnimationToEnd
+# Dismiss keyboard
+- tapOn:
+    point: "50%,5%"
 # Save the budget
 - tapOn: "Save"
 # Verify the budget appears in the list

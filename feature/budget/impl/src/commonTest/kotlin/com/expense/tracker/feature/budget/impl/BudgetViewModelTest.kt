@@ -28,6 +28,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+private fun fakeBudgetMapper(): BudgetPresentationMapper =
+    BudgetPresentationMapper(FakeTimeProvider())
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class BudgetViewModelTest {
     private val mainDispatcher = StandardTestDispatcher()
@@ -48,6 +51,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         assertIs<BudgetContentState.Loading>(viewModel.state.value.contentState)
@@ -62,6 +66,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.Load)
@@ -80,6 +85,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.Load)
@@ -101,15 +107,16 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.Load)
         advanceUntilIdle()
 
         val contentState = assertIs<BudgetContentState.Content>(viewModel.state.value.contentState)
-        val foodEntry = contentState.budgets.find { it.budget.category == TransactionCategory.FOOD }
+        val foodEntry = contentState.budgets.find { it.category == TransactionCategory.FOOD }
         assertTrue(foodEntry != null)
-        assertEquals(45.0, foodEntry.spentAmount)
+        assertEquals("$45.00", foodEntry.formattedSpent)
     }
 
     @Test
@@ -129,6 +136,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.Load)
@@ -145,6 +153,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(current = 5000L),
+            mapper = fakeBudgetMapper(),
         )
         viewModel.onAction(BudgetAction.Load)
         advanceUntilIdle()
@@ -166,6 +175,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(current = 5000L),
+            mapper = fakeBudgetMapper(),
         )
         viewModel.onAction(BudgetAction.Load)
         advanceUntilIdle()
@@ -187,6 +197,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.StartCreate(emptyList()))
@@ -203,6 +214,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.StartCreate(emptyList()))
@@ -219,6 +231,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.StartCreate(emptyList()))
@@ -236,6 +249,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
         viewModel.onAction(BudgetAction.Load)
         advanceUntilIdle()
@@ -254,6 +268,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
         viewModel.onAction(BudgetAction.Load)
         advanceUntilIdle()
@@ -274,6 +289,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
         viewModel.onAction(BudgetAction.Load)
         advanceUntilIdle()
@@ -290,6 +306,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.ToggleCategoryMenu)
@@ -307,6 +324,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.LimitChanged("42.50"))
@@ -319,6 +337,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.StartCreate(listOf(TransactionCategory.FOOD)))
@@ -334,6 +353,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.StartEdit("b-1", 100.0, TransactionCategory.FOOD))
@@ -351,6 +371,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.StartCreate(emptyList()))
@@ -374,6 +395,7 @@ class BudgetViewModelTest {
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetMapper(),
         )
 
         viewModel.onAction(BudgetAction.Load)

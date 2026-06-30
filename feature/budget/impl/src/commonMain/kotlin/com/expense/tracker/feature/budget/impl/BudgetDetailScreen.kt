@@ -41,13 +41,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.expense.tracker.feature.budget.domain.model.BudgetDetail
 import com.expense.tracker.feature.budget.domain.model.BudgetStatus
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
-import com.expense.tracker.shared.core.domain.SystemTimeProvider
 import com.expense.tracker.shared.core.domain.TimeProvider
+import com.expense.tracker.shared.core.domain.asMessageText
 import com.expense.tracker.shared.core.presentation.MviViewModel
 import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.budget_delete_body
@@ -87,6 +86,7 @@ private val BudgetRed = Color(0xFFEF5350)
 class BudgetDetailViewModel(
     private val budgetRepository: BudgetRepository,
     private val timeProvider: TimeProvider,
+    val mapper: BudgetPresentationMapper,
 ) : MviViewModel<BudgetDetailState, BudgetDetailAction, BudgetDetailEvent>(
     initialState = BudgetDetailState(),
 ) {
@@ -114,7 +114,9 @@ class BudgetDetailViewModel(
                     }
                 } else {
                     updateState {
-                        it.copy(contentState = BudgetDetailContentState.Content(detail))
+                        it.copy(contentState = BudgetDetailContentState.Content(
+                            mapper.toBudgetDetailUi(detail)
+                        ))
                     }
                 }
             }
@@ -136,11 +138,6 @@ class BudgetDetailViewModel(
     }
 }
 
-private fun AppError.asMessageText(): String = when (this) {
-    AppError.Unknown -> "Something went wrong"
-    is AppError.Message -> value
-}
-
 // ── Detail State / Action / Event ──────────────────────────────────────
 
 data class BudgetDetailState(
@@ -149,7 +146,7 @@ data class BudgetDetailState(
 
 sealed interface BudgetDetailContentState {
     data object Loading : BudgetDetailContentState
-    data class Content(val detail: BudgetDetail) : BudgetDetailContentState
+    data class Content(val detail: BudgetDetailUi) : BudgetDetailContentState
     data class Error(val error: AppError) : BudgetDetailContentState
 }
 
@@ -175,7 +172,6 @@ fun BudgetDetailScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val mapper = remember { BudgetPresentationMapper(SystemTimeProvider) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -204,7 +200,7 @@ fun BudgetDetailScreen(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
-                title = detail?.budgetWithSpending?.budget?.category?.name ?: "",
+                title = detail?.category?.asLabel() ?: "",
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -215,7 +211,7 @@ fun BudgetDetailScreen(
                 },
                 actions = {
                     if (detail != null) {
-                        IconButton(onClick = { onNavigateToEdit(detail.budgetWithSpending.budget.id) }) {
+                        IconButton(onClick = { onNavigateToEdit(detail.id) }) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
                                 contentDescription = "Edit budget",
@@ -236,7 +232,6 @@ fun BudgetDetailScreen(
     ) { innerPadding ->
         BudgetDetailBody(
             state = state,
-            mapper = mapper,
             onRetry = { viewModel.onAction(BudgetDetailAction.Load(budgetId)) },
             modifier = Modifier.padding(innerPadding),
         )
@@ -271,7 +266,6 @@ fun BudgetDetailScreen(
 @Composable
 private fun BudgetDetailBody(
     state: BudgetDetailState,
-    mapper: BudgetPresentationMapper,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -287,8 +281,7 @@ private fun BudgetDetailBody(
 
         is BudgetDetailContentState.Content -> {
             val detail = contentState.detail
-            val budgetWithSpending = detail.budgetWithSpending
-            val statusColor = when (budgetWithSpending.status) {
+            val statusColor = when (detail.status) {
                 BudgetStatus.UNDER_75 -> BudgetGreen
                 BudgetStatus.BETWEEN_75_90 -> BudgetYellow
                 BudgetStatus.OVER_90 -> BudgetRed
@@ -307,7 +300,7 @@ private fun BudgetDetailBody(
                         verticalArrangement = Arrangement.spacedBy(DreamTheme.spacing.sm),
                     ) {
                         Text(
-                            text = budgetWithSpending.budget.category.name,
+                            text = detail.category.asLabel(),
                             style = MaterialTheme.typography.titleMedium,
                         )
 
@@ -322,7 +315,7 @@ private fun BudgetDetailBody(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    text = mapper.formatAmount(budgetWithSpending.spentAmount),
+                                    text = detail.formattedSpent,
                                     style = MaterialTheme.typography.titleLarge,
                                     color = MaterialTheme.colorScheme.error,
                                     fontWeight = FontWeight.Bold,
@@ -335,9 +328,9 @@ private fun BudgetDetailBody(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Text(
-                                    text = mapper.formatAmount(budgetWithSpending.remainingAmount),
+                                    text = detail.formattedRemaining,
                                     style = MaterialTheme.typography.titleLarge,
-                                    color = if (budgetWithSpending.remainingAmount < 0) {
+                                    color = if (detail.isOverBudget) {
                                         MaterialTheme.colorScheme.error
                                     } else {
                                         BudgetGreen
@@ -348,13 +341,13 @@ private fun BudgetDetailBody(
                         }
 
                         M3LinearProgressIndicator(
-                            progress = { budgetWithSpending.percentage.coerceIn(0.0, 1.0).toFloat() },
+                            progress = { detail.percentage },
                             modifier = Modifier.fillMaxWidth(),
                             color = statusColor,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         )
 
-                        if (budgetWithSpending.status == BudgetStatus.OVER_BUDGET) {
+                        if (detail.isOverBudget) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(DreamTheme.spacing.xs),
@@ -392,13 +385,10 @@ private fun BudgetDetailBody(
                         accentColor = MaterialTheme.colorScheme.secondary,
                     )
                 } else {
-                    detail.transactions.forEach { transaction ->
-                        val formattedAmount = mapper.formatAmount(transaction.amount)
-                        val formattedDate = mapper.formatDate(transaction.createdAtMillis)
-
+                    detail.transactions.forEach { tx ->
                         ListItem(
-                            headline = formattedAmount,
-                            supportingText = "${transaction.category.name} \u00B7 $formattedDate",
+                            headline = tx.formattedAmount,
+                            supportingText = "${tx.category.asLabel()} \u00B7 ${tx.formattedDate}",
                             leadingContent = {
                                 Box(
                                     modifier = Modifier.size(40.dp).clip(CircleShape)

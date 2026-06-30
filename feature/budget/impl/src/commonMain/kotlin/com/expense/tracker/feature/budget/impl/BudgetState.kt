@@ -1,6 +1,5 @@
 package com.expense.tracker.feature.budget.impl
 
-import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.shared.core.domain.AppError
 
@@ -19,7 +18,7 @@ data class BudgetState(
 sealed interface BudgetContentState {
     data object Loading : BudgetContentState
     data object Empty : BudgetContentState
-    data class Content(val budgets: List<BudgetWithSpending>) : BudgetContentState
+    data class Content(val budgets: List<BudgetWithSpendingUi>) : BudgetContentState
     data class Error(val error: AppError) : BudgetContentState
 }
 

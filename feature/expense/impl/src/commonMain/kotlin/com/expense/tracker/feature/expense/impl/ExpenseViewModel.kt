@@ -1,15 +1,19 @@
 package com.expense.tracker.feature.expense.impl
 
+import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.expense.domain.model.computeDashboard
 import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
+import com.expense.tracker.shared.core.domain.asMessageText
 import com.expense.tracker.shared.core.domain.TimeProvider
 import com.expense.tracker.shared.core.presentation.MviViewModel
 
 class ExpenseViewModel(
     private val repository: TransactionRepository,
     private val timeProvider: TimeProvider,
+    val mapper: ExpensePresentationMapper,
 ) : MviViewModel<ExpenseState, ExpenseAction, ExpenseEvent>(
     initialState = ExpenseState(),
 ) {
@@ -30,8 +34,6 @@ class ExpenseViewModel(
             }
             is ExpenseAction.SaveTransaction -> saveTransaction()
             is ExpenseAction.DeleteTransaction -> deleteTransaction(action.id)
-            is ExpenseAction.ConfirmDelete -> { /* unused - confirmation is local in UI */ }
-            is ExpenseAction.CancelDelete -> { /* unused - confirmation is local in UI */ }
             is ExpenseAction.ToggleFormSheet -> updateState {
                 it.copy(showBottomSheet = !it.showBottomSheet)
             }
@@ -47,14 +49,15 @@ class ExpenseViewModel(
         when (val result = repository.loadTransactions()) {
             is Result.Success -> {
                 val transactions = result.value
+                val dashboard = computeDashboard(transactions)
                 updateState { current ->
                     current.copy(
                         contentState = if (transactions.isEmpty()) {
                             ExpenseContentState.Empty
                         } else {
-                            ExpenseContentState.Content(transactions)
+                            ExpenseContentState.Content(transactions.map(mapper::toTransactionUi))
                         },
-                        dashboard = computeDashboard(transactions),
+                        dashboard = mapper.toDashboardUi(dashboard),
                     )
                 }
             }
@@ -85,8 +88,8 @@ class ExpenseViewModel(
                     current.copy(
                         amountText = "",
                         noteText = "",
-                        selectedType = com.expense.tracker.feature.expense.domain.model.TransactionType.EXPENSE,
-                        selectedCategory = com.expense.tracker.feature.expense.domain.model.TransactionCategory.OTHER,
+                        selectedType = TransactionType.EXPENSE,
+                        selectedCategory = TransactionCategory.OTHER,
                         showBottomSheet = false,
                     )
                 }
@@ -95,7 +98,7 @@ class ExpenseViewModel(
             }
 
             is Result.Failure -> {
-                sendEvent(ExpenseEvent.Error(result.error.messageText()))
+                sendEvent(ExpenseEvent.Error(result.error.asMessageText()))
             }
         }
     }
@@ -107,13 +110,8 @@ class ExpenseViewModel(
             }
 
             is Result.Failure -> {
-                sendEvent(ExpenseEvent.Error(result.error.messageText()))
+                sendEvent(ExpenseEvent.Error(result.error.asMessageText()))
             }
         }
     }
-}
-
-private fun AppError.messageText(): String = when (this) {
-    AppError.Unknown -> "Something went wrong"
-    is AppError.Message -> value
 }

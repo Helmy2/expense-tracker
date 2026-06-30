@@ -13,8 +13,6 @@ sealed interface ExpenseAction {
     data object DismissCategoryMenu : ExpenseAction
     data object SaveTransaction : ExpenseAction
     data class DeleteTransaction(val id: String) : ExpenseAction
-    data object ConfirmDelete : ExpenseAction
-    data object CancelDelete : ExpenseAction
     data object ToggleFormSheet : ExpenseAction
     data object DismissFormSheet : ExpenseAction
 }

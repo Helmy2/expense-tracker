@@ -14,6 +14,7 @@ local.properties
 
 # Xcode user data
 xcuserdata/
+*.pbxproj.bak
 
 # Dream AI agent scaffolding
 .opencode/

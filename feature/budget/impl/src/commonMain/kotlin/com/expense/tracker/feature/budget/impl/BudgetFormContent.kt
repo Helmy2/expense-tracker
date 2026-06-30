@@ -29,16 +29,6 @@ import com.expense.tracker.shared.core.strings.budget_limit_label
 import com.expense.tracker.shared.core.strings.budget_limit_placeholder
 import com.expense.tracker.shared.core.strings.budget_limit_validation
 import com.expense.tracker.shared.core.strings.budget_save
-import com.expense.tracker.shared.core.strings.expense_category_education
-import com.expense.tracker.shared.core.strings.expense_category_entertainment
-import com.expense.tracker.shared.core.strings.expense_category_food
-import com.expense.tracker.shared.core.strings.expense_category_healthcare
-import com.expense.tracker.shared.core.strings.expense_category_other
-import com.expense.tracker.shared.core.strings.expense_category_rent
-import com.expense.tracker.shared.core.strings.expense_category_salary
-import com.expense.tracker.shared.core.strings.expense_category_shopping
-import com.expense.tracker.shared.core.strings.expense_category_transportation
-import com.expense.tracker.shared.core.strings.expense_category_utilities
 import com.expense.tracker.shared.designsystem.DreamTheme
 import com.expense.tracker.shared.designsystem.components.Button
 import com.expense.tracker.shared.designsystem.components.IconButton
@@ -179,16 +169,4 @@ private fun CategoryDropdown(
     }
 }
 
-@Composable
-private fun TransactionCategory.asLabel(): String = when (this) {
-    TransactionCategory.FOOD -> stringResource(Res.string.expense_category_food)
-    TransactionCategory.RENT -> stringResource(Res.string.expense_category_rent)
-    TransactionCategory.SALARY -> stringResource(Res.string.expense_category_salary)
-    TransactionCategory.ENTERTAINMENT -> stringResource(Res.string.expense_category_entertainment)
-    TransactionCategory.TRANSPORTATION -> stringResource(Res.string.expense_category_transportation)
-    TransactionCategory.UTILITIES -> stringResource(Res.string.expense_category_utilities)
-    TransactionCategory.SHOPPING -> stringResource(Res.string.expense_category_shopping)
-    TransactionCategory.HEALTHCARE -> stringResource(Res.string.expense_category_healthcare)
-    TransactionCategory.EDUCATION -> stringResource(Res.string.expense_category_education)
-    TransactionCategory.OTHER -> stringResource(Res.string.expense_category_other)
-}
+

@@ -40,12 +40,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.expense.tracker.feature.expense.domain.model.DashboardSummary
-import com.expense.tracker.feature.expense.domain.model.Transaction
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.shared.core.domain.AppError
-import com.expense.tracker.shared.core.domain.SystemTimeProvider
+import com.expense.tracker.shared.core.domain.asMessageText
 import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.expense_amount_label
 import com.expense.tracker.shared.core.strings.expense_amount_validation
@@ -103,7 +101,6 @@ fun ExpenseContent(
     onAction: (ExpenseAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val mapper = remember { ExpensePresentationMapper(SystemTimeProvider) }
 
     Column(
         modifier = modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState())
@@ -132,7 +129,6 @@ fun ExpenseContent(
                 TransactionListSection(
                     transactions = contentState.transactions,
                     onAction = onAction,
-                    mapper = mapper,
                 )
             }
 
@@ -169,7 +165,7 @@ private fun EmptyStateCard() {
 }
 
 @Composable
-private fun DashboardSection(dashboard: DashboardSummary) {
+private fun DashboardSection(dashboard: DashboardSummaryUi) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(Res.string.expense_balance_label),
@@ -177,7 +173,7 @@ private fun DashboardSection(dashboard: DashboardSummary) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            text = formatCurrency(dashboard.totalBalance),
+            text = dashboard.formattedBalance,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
@@ -189,14 +185,14 @@ private fun DashboardSection(dashboard: DashboardSummary) {
         ) {
             DashboardMetric(
                 label = stringResource(Res.string.expense_income_label),
-                value = formatCurrency(dashboard.totalIncome),
+                value = dashboard.formattedIncome,
                 valueStyle = MaterialTheme.typography.titleLarge,
                 valueColor = IncomeGreen,
                 modifier = Modifier.weight(1f),
             )
             DashboardMetric(
                 label = stringResource(Res.string.expense_expenses_label),
-                value = formatCurrency(dashboard.totalExpenses),
+                value = dashboard.formattedExpenses,
                 valueStyle = MaterialTheme.typography.titleLarge,
                 valueColor = ExpenseRed,
                 modifier = Modifier.weight(1f),
@@ -416,9 +412,8 @@ private fun TransactionCategory.asLabel(): String = when (this) {
 
 @Composable
 private fun TransactionListSection(
-    transactions: List<Transaction>,
+    transactions: List<ExpenseTransactionUi>,
     onAction: (ExpenseAction) -> Unit,
-    mapper: ExpensePresentationMapper,
 ) {
     Column {
         Text(
@@ -433,7 +428,6 @@ private fun TransactionListSection(
             TransactionItem(
                 transaction = transaction,
                 onDelete = { onAction(ExpenseAction.DeleteTransaction(transaction.id)) },
-                mapper = mapper,
             )
             HorizontalDivider(modifier = Modifier.padding(start = DreamTheme.spacing.md))
         }
@@ -443,30 +437,26 @@ private fun TransactionListSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TransactionItem(
-    transaction: Transaction,
+    transaction: ExpenseTransactionUi,
     onDelete: () -> Unit,
-    mapper: ExpensePresentationMapper,
 ) {
-    val isIncome = transaction.type == TransactionType.INCOME
-    val iconTint = if (isIncome) IncomeGreen else ExpenseRed
-    val formattedAmount = mapper.formatAmount(transaction.amount, isIncome)
-    val formattedDate = mapper.formatDate(transaction.createdAtMillis)
+    val iconTint = if (transaction.isIncome) IncomeGreen else ExpenseRed
 
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     ListItem(
-        headline = formattedAmount,
-        supportingText = "${transaction.category.asLabel()} \u00B7 $formattedDate",
+        headline = transaction.formattedAmount,
+        supportingText = "${transaction.category.asLabel()} \u00B7 ${transaction.formattedDate}",
         leadingContent = {
             Box(
                 modifier = Modifier.size(40.dp).clip(CircleShape).background(
-                    if (isIncome) IncomeGreen.copy(alpha = 0.15f)
+                    if (transaction.isIncome) IncomeGreen.copy(alpha = 0.15f)
                     else ExpenseRed.copy(alpha = 0.15f)
                 ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = if (isIncome) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    imageVector = if (transaction.isIncome) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
                     tint = iconTint,
                     contentDescription = null,
                 )
@@ -509,15 +499,4 @@ private fun TransactionItem(
     }
 }
 
-private fun AppError.asMessageText(): String = when (this) {
-    AppError.Unknown -> "Something went wrong"
-    is AppError.Message -> value
-}
 
-private fun formatCurrency(amount: Double): String {
-    val sign = if (amount >= 0) "" else "-"
-    val abs = kotlin.math.abs(amount)
-    val whole = abs.toLong()
-    val frac = ((abs - whole) * 100).toInt()
-    return "$sign$${whole}.${frac.toString().padStart(2, '0')}"
-}

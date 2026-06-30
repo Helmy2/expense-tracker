@@ -12,6 +12,7 @@ import com.expense.tracker.shared.core.testing.FakeTimeProvider
 import dev.mokkery.answering.returns
 import dev.mokkery.everySuspend
 import dev.mokkery.mock
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -24,6 +25,9 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+
+private fun fakeBudgetDetailMapper(): BudgetPresentationMapper =
+    BudgetPresentationMapper(FakeTimeProvider())
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BudgetDetailViewModelTest {
@@ -44,6 +48,7 @@ class BudgetDetailViewModelTest {
         val viewModel = BudgetDetailViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetDetailMapper(),
         )
 
         assertIs<BudgetDetailContentState.Loading>(viewModel.state.value.contentState)
@@ -63,13 +68,14 @@ class BudgetDetailViewModelTest {
         val viewModel = BudgetDetailViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetDetailMapper(),
         )
 
         viewModel.onAction(BudgetDetailAction.Load("b-1"))
         advanceUntilIdle()
 
         val contentState = assertIs<BudgetDetailContentState.Content>(viewModel.state.value.contentState)
-        assertEquals("b-1", contentState.detail.budgetWithSpending.budget.id)
+        assertEquals("b-1", contentState.detail.id)
     }
 
     @Test
@@ -78,6 +84,7 @@ class BudgetDetailViewModelTest {
         val viewModel = BudgetDetailViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetDetailMapper(),
         )
 
         viewModel.onAction(BudgetDetailAction.Load("nonexistent-id"))
@@ -94,6 +101,7 @@ class BudgetDetailViewModelTest {
         val viewModel = BudgetDetailViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetDetailMapper(),
         )
 
         viewModel.onAction(BudgetDetailAction.Load("b-1"))
@@ -116,6 +124,7 @@ class BudgetDetailViewModelTest {
         val viewModel = BudgetDetailViewModel(
             budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeBudgetDetailMapper(),
         )
 
         viewModel.onAction(BudgetDetailAction.Load("b-1"))

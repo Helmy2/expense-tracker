@@ -26,17 +26,14 @@ import androidx.compose.material3.LinearProgressIndicator as M3LinearProgressInd
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.expense.tracker.feature.budget.domain.model.BudgetStatus
-import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.shared.core.domain.AppError
-import com.expense.tracker.shared.core.domain.SystemTimeProvider
 import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.budget_empty_body
 import com.expense.tracker.shared.core.strings.budget_empty_title
@@ -44,16 +41,6 @@ import com.expense.tracker.shared.core.strings.budget_error_body
 import com.expense.tracker.shared.core.strings.budget_error_title
 import com.expense.tracker.shared.core.strings.budget_over_budget_warning
 import com.expense.tracker.shared.core.strings.budget_retry
-import com.expense.tracker.shared.core.strings.expense_category_education
-import com.expense.tracker.shared.core.strings.expense_category_entertainment
-import com.expense.tracker.shared.core.strings.expense_category_food
-import com.expense.tracker.shared.core.strings.expense_category_healthcare
-import com.expense.tracker.shared.core.strings.expense_category_other
-import com.expense.tracker.shared.core.strings.expense_category_rent
-import com.expense.tracker.shared.core.strings.expense_category_salary
-import com.expense.tracker.shared.core.strings.expense_category_shopping
-import com.expense.tracker.shared.core.strings.expense_category_transportation
-import com.expense.tracker.shared.core.strings.expense_category_utilities
 import com.expense.tracker.shared.designsystem.DreamTheme
 import com.expense.tracker.shared.designsystem.components.Card
 import com.expense.tracker.shared.designsystem.components.CardVariant
@@ -157,7 +144,7 @@ fun BudgetContent(
 
 @Composable
 private fun BudgetList(
-    budgets: List<BudgetWithSpending>,
+    budgets: List<BudgetWithSpendingUi>,
     onAction: (BudgetAction) -> Unit,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToEdit: (String) -> Unit,
@@ -168,11 +155,11 @@ private fun BudgetList(
             .padding(horizontal = DreamTheme.spacing.md, vertical = DreamTheme.spacing.sm),
         verticalArrangement = Arrangement.spacedBy(DreamTheme.spacing.sm),
     ) {
-        budgets.forEachIndexed { index, budgetWithSpending ->
+        budgets.forEachIndexed { index, budget ->
             BudgetCard(
-                budgetWithSpending = budgetWithSpending,
-                onClick = { onNavigateToDetail(budgetWithSpending.budget.id) },
-                onEdit = { onNavigateToEdit(budgetWithSpending.budget.id) },
+                budget = budget,
+                onClick = { onNavigateToDetail(budget.id) },
+                onEdit = { onNavigateToEdit(budget.id) },
             )
             if (index < budgets.lastIndex) {
                 HorizontalDivider()
@@ -184,12 +171,11 @@ private fun BudgetList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BudgetCard(
-    budgetWithSpending: BudgetWithSpending,
+    budget: BudgetWithSpendingUi,
     onClick: () -> Unit,
     onEdit: () -> Unit,
 ) {
-    val mapper = remember { BudgetPresentationMapper(SystemTimeProvider) }
-    val statusColor = when (budgetWithSpending.status) {
+    val statusColor = when (budget.status) {
         BudgetStatus.UNDER_75 -> BudgetGreen
         BudgetStatus.BETWEEN_75_90 -> BudgetYellow
         BudgetStatus.OVER_90 -> BudgetRed
@@ -226,7 +212,7 @@ private fun BudgetCard(
                         )
                     }
                     Text(
-                        text = budgetWithSpending.budget.category.asLabel(),
+                        text = budget.category.asLabel(),
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
@@ -241,21 +227,21 @@ private fun BudgetCard(
 
             // Row 2: Amounts
             Text(
-                text = "${mapper.formatAmount(budgetWithSpending.spentAmount)} of ${mapper.formatAmount(budgetWithSpending.budget.monthlyLimit)}",
+                text = "${budget.formattedSpent} of ${budget.formattedLimit}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             // Row 3: Progress bar
             M3LinearProgressIndicator(
-                progress = { budgetWithSpending.percentage.coerceIn(0.0, 1.0).toFloat() },
+                progress = { budget.percentage },
                 modifier = Modifier.fillMaxWidth(),
                 color = statusColor,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant,
             )
 
             // Row 4: Over-budget warning (conditional)
-            if (budgetWithSpending.status == BudgetStatus.OVER_BUDGET) {
+            if (budget.isOverBudget) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(DreamTheme.spacing.xs),
@@ -277,21 +263,4 @@ private fun BudgetCard(
     }
 }
 
-@Composable
-private fun TransactionCategory.asLabel(): String = when (this) {
-    TransactionCategory.FOOD -> stringResource(Res.string.expense_category_food)
-    TransactionCategory.RENT -> stringResource(Res.string.expense_category_rent)
-    TransactionCategory.SALARY -> stringResource(Res.string.expense_category_salary)
-    TransactionCategory.ENTERTAINMENT -> stringResource(Res.string.expense_category_entertainment)
-    TransactionCategory.TRANSPORTATION -> stringResource(Res.string.expense_category_transportation)
-    TransactionCategory.UTILITIES -> stringResource(Res.string.expense_category_utilities)
-    TransactionCategory.SHOPPING -> stringResource(Res.string.expense_category_shopping)
-    TransactionCategory.HEALTHCARE -> stringResource(Res.string.expense_category_healthcare)
-    TransactionCategory.EDUCATION -> stringResource(Res.string.expense_category_education)
-    TransactionCategory.OTHER -> stringResource(Res.string.expense_category_other)
-}
 
-private fun AppError.asMessageText(): String = when (this) {
-    AppError.Unknown -> "Something went wrong"
-    is AppError.Message -> value
-}

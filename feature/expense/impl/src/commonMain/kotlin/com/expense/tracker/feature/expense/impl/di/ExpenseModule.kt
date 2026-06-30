@@ -2,6 +2,7 @@ package com.expense.tracker.feature.expense.impl.di
 
 import com.expense.tracker.feature.budget.api.navigation.BudgetRoute
 import com.expense.tracker.feature.expense.api.navigation.ExpenseRoute
+import com.expense.tracker.feature.expense.impl.ExpensePresentationMapper
 import com.expense.tracker.feature.expense.impl.ExpenseScreen
 import com.expense.tracker.feature.expense.impl.ExpenseViewModel
 import com.expense.tracker.shared.navigation.Navigator
@@ -14,6 +15,7 @@ import org.koin.plugin.module.dsl.viewModel
 @OptIn(KoinExperimentalAPI::class)
 val expenseUiModule = module {
     viewModel<ExpenseViewModel>()
+    factory { ExpensePresentationMapper(get()) }
 
     navigation<ExpenseRoute> {
         val navigator = koinInject<Navigator>()

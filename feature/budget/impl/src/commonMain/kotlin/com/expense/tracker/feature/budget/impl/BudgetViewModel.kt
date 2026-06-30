@@ -5,11 +5,13 @@ import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.TimeProvider
+import com.expense.tracker.shared.core.domain.asMessageText
 import com.expense.tracker.shared.core.presentation.MviViewModel
 
 class BudgetViewModel(
     private val budgetRepository: BudgetRepository,
     private val timeProvider: TimeProvider,
+    val mapper: BudgetPresentationMapper,
 ) : MviViewModel<BudgetState, BudgetAction, BudgetEvent>(
     initialState = BudgetState(),
 ) {
@@ -81,7 +83,9 @@ class BudgetViewModel(
                     updateState { it.copy(contentState = BudgetContentState.Empty) }
                 } else {
                     updateState {
-                        it.copy(contentState = BudgetContentState.Content(budgetsWithSpending))
+                        it.copy(contentState = BudgetContentState.Content(
+                            budgetsWithSpending.map(mapper::toBudgetWithSpendingUi)
+                        ))
                     }
                 }
             }
@@ -167,7 +171,4 @@ class BudgetViewModel(
     }
 }
 
-private fun AppError.asMessageText(): String = when (this) {
-    AppError.Unknown -> "Something went wrong"
-    is AppError.Message -> value
-}
+

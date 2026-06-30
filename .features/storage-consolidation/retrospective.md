@@ -86,8 +86,8 @@
 
 ## Application Status
 
-- Applied: `not yet` (the recommendations above are pending; `dream-improve` is the natural place to apply them).
-- What was updated: *(nothing yet — this retro is unapplied)*
+- Applied: 2026-06-30
+- What was updated: Added uninstall-before-install note for both Android and iOS to `dream-agent-operating-guide.md` verification rules; clarified mapper placement in `10-data-layer-practices.md` §10.5 with anti-example; added feature-mapper-in-shared-data anti-pattern to `26-anti-patterns-to-avoid-when-reusing-this-architecture.md`; added `.pbxproj.bak` to `.gitignore`. Skipped: iOS bundle identifier note (too project-specific), schema migration multi-db scenario (already covered by general migration advice in §11.1/§11.4), reference template files (too implementation-specific), round-summary template (already covered by State Persistence Before Delegation section).
 
 ## Bottom Line
 

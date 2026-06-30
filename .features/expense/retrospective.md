@@ -66,10 +66,8 @@
 
 ## Application Status
 
-- Applied: `2026-06-27`
-- What was updated:
-  - `.opencode/guidance/new-feature-checklist.md` — Added explicit verification steps in Sample Removal section to confirm cleanup of Maestro sample flows (`maestro/features/sample/`), Room schema export directories (`shared/core/data/schemas/`), and settings/build file references.
-  - `.opencode/knowledge-graph/best-practices/26-anti-patterns-to-avoid-when-reusing-this-architecture.md` — Broadened anti-pattern #17 to explicitly cover leftover sample artifacts (Room schema exports, Maestro flow directories, sample string keys, stray imports) with a reference to `./scripts/remove-sample.sh`.
+- Applied: 2026-06-30
+- What was updated: Sample artifact removal checklist already exists in `new-feature-checklist.md` lines 90-96; hardcoded `SystemTimeProvider` in composable added as anti-pattern in `26-anti-patterns-to-avoid-when-reusing-this-architecture.md`. No additional guidance changes needed — the remaining recommendation was already covered.
 
 ## Bottom Line
 

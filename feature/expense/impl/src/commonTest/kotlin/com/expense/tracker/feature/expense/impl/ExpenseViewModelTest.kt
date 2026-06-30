@@ -25,6 +25,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+private fun fakeMapper(): ExpensePresentationMapper =
+    ExpensePresentationMapper(FakeTimeProvider())
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExpenseViewModelTest {
     private val mainDispatcher = StandardTestDispatcher()
@@ -45,6 +48,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         assertIs<ExpenseContentState.Loading>(viewModel.state.value.contentState)
@@ -56,6 +60,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.Load)
@@ -70,6 +75,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.Load)
@@ -85,15 +91,16 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
 
         val dashboard = viewModel.state.value.dashboard
-        assertEquals(100.0, dashboard.totalIncome)
-        assertEquals(60.0, dashboard.totalExpenses)
-        assertEquals(40.0, dashboard.totalBalance)
+        assertEquals("$100.00", dashboard.formattedIncome)
+        assertEquals("$60.00", dashboard.formattedExpenses)
+        assertEquals("$40.00", dashboard.formattedBalance)
     }
 
     @Test
@@ -102,6 +109,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
+            mapper = fakeMapper(),
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -124,6 +132,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
+            mapper = fakeMapper(),
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -145,6 +154,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("0"))
@@ -160,6 +170,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("-5"))
@@ -175,6 +186,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("abc"))
@@ -190,6 +202,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -201,26 +214,11 @@ class ExpenseViewModelTest {
     }
 
     @Test
-    fun cancelDeleteDoesNotCallRepository() = runTest(mainDispatcher) {
-        val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = ExpenseViewModel(
-            repository = repository,
-            timeProvider = FakeTimeProvider(),
-        )
-        viewModel.onAction(ExpenseAction.Load)
-        advanceUntilIdle()
-
-        viewModel.onAction(ExpenseAction.CancelDelete)
-        advanceUntilIdle()
-
-        assertEquals(0, repository.deleteCount)
-    }
-
-    @Test
     fun typeSelectionUpdatesState() = runTest(mainDispatcher) {
         val viewModel = ExpenseViewModel(
             repository = fakeRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.TypeSelected(TransactionType.INCOME))
@@ -237,6 +235,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = fakeRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.ToggleCategoryMenu)
@@ -254,6 +253,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = fakeRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("42.50"))
@@ -266,6 +266,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = fakeRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.NoteChanged("Groceries"))
@@ -279,11 +280,13 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
+            mapper = fakeMapper(),
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
 
-        val initialBalance = viewModel.state.value.dashboard.totalBalance
+        val initialBalance = viewModel.state.value.dashboard.formattedBalance
+        assertEquals("$40.00", initialBalance)
 
         viewModel.onAction(ExpenseAction.AmountChanged("50"))
         viewModel.onAction(ExpenseAction.TypeSelected(TransactionType.INCOME))
@@ -291,8 +294,8 @@ class ExpenseViewModelTest {
         viewModel.onAction(ExpenseAction.SaveTransaction)
         advanceUntilIdle()
 
-        val newBalance = viewModel.state.value.dashboard.totalBalance
-        assertEquals(initialBalance + 50.0, newBalance)
+        val newBalance = viewModel.state.value.dashboard.formattedBalance
+        assertEquals("$90.00", newBalance)
     }
 
     @Test
@@ -300,6 +303,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = fakeRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         assertEquals(false, viewModel.state.value.showBottomSheet)
@@ -315,6 +319,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = fakeRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.ToggleFormSheet)
@@ -332,6 +337,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = fakeRepository(transactions = emptyList()),
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         assertEquals(false, viewModel.state.value.showBottomSheet)
@@ -349,6 +355,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.ToggleFormSheet)
@@ -370,6 +377,7 @@ class ExpenseViewModelTest {
         val viewModel = ExpenseViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(),
+            mapper = fakeMapper(),
         )
 
         viewModel.onAction(ExpenseAction.Load)

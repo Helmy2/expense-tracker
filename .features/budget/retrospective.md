@@ -82,8 +82,8 @@
 
 ## Application Status
 
-- Applied: not yet
-- What was updated: recommendations documented in this retrospective
+- Applied: 2026-06-30
+- What was updated: Added `viewModel<T>()` syntax rule to `dream-agent-operating-guide.md` and `new-feature-checklist.md`; added `internal` test helper visibility note to `23-testing-oriented-practices-to-reuse.md`; added 3 anti-patterns (mappers in shared data, viewModel lambda syntax, hardcoded SystemTimeProvider in composables) to `26-anti-patterns-to-avoid-when-reusing-this-architecture.md`. Skipped: `sync-pbxproj.rb` path fix (already uses `iosApp/`), project-specific utility extractions (TransactionCategory.asLabel, AppError.asMessageText).
 
 ## Bottom Line
 
