@@ -1,6 +1,5 @@
 package com.expense.tracker.feature.recurring.domain.repository
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.feature.recurring.domain.model.RecurringTemplate
@@ -31,7 +30,7 @@ class RecurringTemplateRepositoryTest {
             repository.createTemplate(
                 amount = 1500.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.RENT,
+                category = "RENT",
                 note = "Monthly rent",
                 frequency = RecurringFrequency.MONTHLY,
                 startDateMillis = 1_720_000_000_000,
@@ -41,7 +40,7 @@ class RecurringTemplateRepositoryTest {
 
         assertEquals(1500.0, created.amount)
         assertEquals(TransactionType.EXPENSE, created.type)
-        assertEquals(TransactionCategory.RENT, created.category)
+        assertEquals("RENT", created.category)
         assertEquals(RecurringFrequency.MONTHLY, created.frequency)
         assertEquals(false, created.isPaused)
     }
@@ -53,7 +52,7 @@ class RecurringTemplateRepositoryTest {
             repository.createTemplate(
                 amount = 100.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.FOOD,
+                category = "FOOD",
                 note = "Groceries",
                 frequency = RecurringFrequency.WEEKLY,
                 startDateMillis = 1_720_000_000_000,
@@ -76,7 +75,7 @@ class RecurringTemplateRepositoryTest {
             repository.createTemplate(
                 amount = 100.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.FOOD,
+                category = "FOOD",
                 note = "Groceries",
                 frequency = RecurringFrequency.WEEKLY,
                 startDateMillis = 1_720_000_000_000,
@@ -89,7 +88,7 @@ class RecurringTemplateRepositoryTest {
                 id = created.id,
                 amount = 200.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.UTILITIES,
+                category = "UTILITIES",
                 note = "Updated",
                 frequency = RecurringFrequency.MONTHLY,
                 startDateMillis = 1_730_000_000_000,
@@ -98,7 +97,7 @@ class RecurringTemplateRepositoryTest {
         ).value
 
         assertEquals(200.0, updated.amount)
-        assertEquals(TransactionCategory.UTILITIES, updated.category)
+        assertEquals("UTILITIES", updated.category)
         assertEquals(RecurringFrequency.MONTHLY, updated.frequency)
     }
 
@@ -109,7 +108,7 @@ class RecurringTemplateRepositoryTest {
             repository.createTemplate(
                 amount = 100.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.OTHER,
+                category = "OTHER_EXPENSE",
                 note = "Temp",
                 frequency = RecurringFrequency.DAILY,
                 startDateMillis = 1_720_000_000_000,
@@ -133,7 +132,7 @@ class RecurringTemplateRepositoryTest {
             repository.createTemplate(
                 amount = 100.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.OTHER,
+                category = "OTHER_EXPENSE",
                 note = "Test",
                 frequency = RecurringFrequency.MONTHLY,
                 startDateMillis = 1_720_000_000_000,
@@ -166,7 +165,7 @@ private class FakeRecurringTemplateRepository : RecurringTemplateRepository {
     override suspend fun createTemplate(
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequency,
         startDateMillis: Long,
@@ -194,7 +193,7 @@ private class FakeRecurringTemplateRepository : RecurringTemplateRepository {
         id: String,
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequency,
         startDateMillis: Long,

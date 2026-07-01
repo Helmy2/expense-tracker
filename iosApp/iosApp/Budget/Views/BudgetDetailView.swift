@@ -146,7 +146,7 @@ struct BudgetDetailView: View {
                 Text(transaction.formattedAmount)
                     .font(.dreamTitleMedium)
                     .foregroundStyle(colors.onSurface)
-                Text("\(transaction.category.displayName) \u{00B7} \(transaction.displayDate)")
+                Text("\(transaction.categoryDisplayName) \u{00B7} \(transaction.displayDate)")
                     .font(.dreamBodyMedium)
                     .foregroundStyle(colors.onSurfaceVariant)
             }

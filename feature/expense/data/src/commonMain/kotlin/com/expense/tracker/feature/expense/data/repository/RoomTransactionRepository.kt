@@ -1,7 +1,6 @@
 package com.expense.tracker.feature.expense.data.repository
 
 import com.expense.tracker.feature.expense.domain.model.Transaction
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
 import com.expense.tracker.feature.expense.data.mapper.toDomain
@@ -27,7 +26,7 @@ class RoomTransactionRepository(
     override suspend fun addTransaction(
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
     ): Result<Transaction> = runSuspendCatching(
         block = {

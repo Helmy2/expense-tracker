@@ -16,8 +16,8 @@ final class BudgetDetailViewModelTests: XCTestCase {
                 spentAmount: 60
             ),
             transactions: [
-                makeExpenseItem(id: "t1", amount: 25, type: .expense, category: .food, createdAtMillis: Int64(timestamp.timeIntervalSince1970 * 1000)),
-                makeExpenseItem(id: "t2", amount: 35, type: .expense, category: .food, createdAtMillis: Int64(timestamp.timeIntervalSince1970 * 1000))
+                makeExpenseItem(id: "t1", amount: 25, type: .expense, category: ExpenseCategory.food.rawValue, createdAtMillis: Int64(timestamp.timeIntervalSince1970 * 1000)),
+                makeExpenseItem(id: "t2", amount: 35, type: .expense, category: ExpenseCategory.food.rawValue, createdAtMillis: Int64(timestamp.timeIntervalSince1970 * 1000))
             ]
         )
 
@@ -87,7 +87,7 @@ final class BudgetDetailViewModelTests: XCTestCase {
                 spentAmount: 25
             ),
             transactions: [
-                makeExpenseItem(id: "t1", amount: 25, type: .expense, category: .food, createdAtMillis: Int64(currentTimestamp.timeIntervalSince1970 * 1000))
+                makeExpenseItem(id: "t1", amount: 25, type: .expense, category: ExpenseCategory.food.rawValue, createdAtMillis: Int64(currentTimestamp.timeIntervalSince1970 * 1000))
             ]
         )
         // lastMonthTimestamp and rent-tx are not used; the bridge returns a pre-filtered list.

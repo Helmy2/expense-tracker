@@ -1,13 +1,12 @@
 package com.expense.tracker.feature.expense.impl
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 
 sealed interface ExpenseAction {
     data object Load : ExpenseAction
     data class AmountChanged(val value: String) : ExpenseAction
     data class TypeSelected(val type: TransactionType) : ExpenseAction
-    data class CategorySelected(val category: TransactionCategory) : ExpenseAction
+    data class CategorySelected(val category: String) : ExpenseAction
     data class NoteChanged(val value: String) : ExpenseAction
     data object ToggleCategoryMenu : ExpenseAction
     data object DismissCategoryMenu : ExpenseAction

@@ -1,8 +1,8 @@
 package com.expense.tracker.feature.recurring.impl
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
+import com.expense.tracker.feature.expense.domain.model.IncomeCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
-import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.feature.recurring.domain.repository.RecurringTemplateRepository
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
@@ -22,7 +22,13 @@ class RecurringFormViewModel(
         when (action) {
             is RecurringFormAction.SetTemplate -> setTemplate(action.templateId)
             is RecurringFormAction.AmountChanged -> updateState { it.copy(amountText = action.value) }
-            is RecurringFormAction.TypeSelected -> updateState { it.copy(selectedType = action.type) }
+            is RecurringFormAction.TypeSelected -> updateState {
+                val firstCategory = when (action.type) {
+                    TransactionType.INCOME -> IncomeCategory.entries.first().name
+                    TransactionType.EXPENSE -> ExpenseCategory.entries.first().name
+                }
+                it.copy(selectedType = action.type, selectedCategory = firstCategory)
+            }
             is RecurringFormAction.CategorySelected -> updateState {
                 it.copy(selectedCategory = action.category, categoryMenuExpanded = false)
             }

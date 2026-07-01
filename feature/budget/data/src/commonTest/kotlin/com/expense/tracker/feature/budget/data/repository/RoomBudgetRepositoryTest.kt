@@ -2,7 +2,7 @@ package com.expense.tracker.feature.budget.data.repository
 
 import com.expense.tracker.feature.budget.data.mapper.toDomain
 import com.expense.tracker.feature.budget.data.mapper.toEntity
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.data.dao.BudgetDao
 import com.expense.tracker.shared.core.data.dao.TransactionDao
 import com.expense.tracker.shared.core.data.entity.BudgetEntity
@@ -71,7 +71,7 @@ class RoomBudgetRepositoryTest {
         val repo = createRepository(
             budgets = listOf(BudgetEntity("b1", "FOOD", 500.0, 100L, 100L))
         )
-        val result = repo.loadBudgetByCategory(TransactionCategory.FOOD)
+        val result = repo.loadBudgetByCategory(ExpenseCategory.FOOD)
         assertTrue(result is Result.Success)
         assertEquals("b1", (result as Result.Success).value?.id)
     }
@@ -80,10 +80,10 @@ class RoomBudgetRepositoryTest {
     fun createBudget() = runTest {
         fakeTimeProvider.setNowMillis(999L)
         val repo = createRepository()
-        val result = repo.createBudget(TransactionCategory.SHOPPING, 200.0)
+        val result = repo.createBudget(ExpenseCategory.SHOPPING, 200.0)
         assertTrue(result is Result.Success)
         val budget = (result as Result.Success).value
-        assertEquals(TransactionCategory.SHOPPING, budget.category)
+        assertEquals(ExpenseCategory.SHOPPING, budget.category)
         assertEquals(200.0, budget.monthlyLimit)
         assertEquals(999L, budget.createdAtMillis)
         assertEquals(999L, budget.updatedAtMillis)
@@ -164,8 +164,8 @@ class RoomBudgetRepositoryTest {
         val result = repo.loadBudgetsWithSpending()
         assertTrue(result is Result.Success)
         val list = (result as Result.Success).value
-        val food = list.first { it.budget.category == TransactionCategory.FOOD }
-        val rent = list.first { it.budget.category == TransactionCategory.RENT }
+        val food = list.first { it.budget.category == ExpenseCategory.FOOD }
+        val rent = list.first { it.budget.category == ExpenseCategory.RENT }
         // Only t1 + t2 (100 + 50); t4 wrong month, t5 income
         assertEquals(150.0, food.spentAmount)
         // t3 only
@@ -201,7 +201,7 @@ class RoomBudgetRepositoryTest {
         )
         val result = repo.loadBudgetDetail("b1")
         val detail = assertNotNull((result as Result.Success).value)
-        assertEquals(TransactionCategory.FOOD, detail.budgetWithSpending.budget.category)
+        assertEquals(ExpenseCategory.FOOD, detail.budgetWithSpending.budget.category)
         // 100 + 50 = 150 (only t1 and t2 are EXPENSE in FOOD in current month)
         assertEquals(150.0, detail.budgetWithSpending.spentAmount)
         assertEquals(2, detail.transactions.size)

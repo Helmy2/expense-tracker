@@ -5,7 +5,7 @@ import com.expense.tracker.feature.budget.domain.model.Budget
 import com.expense.tracker.feature.budget.domain.model.BudgetDetail
 import com.expense.tracker.feature.budget.domain.model.withSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.testing.FakeTimeProvider
@@ -56,7 +56,7 @@ class BudgetDetailViewModelTest {
 
     @Test
     fun loadWithValidBudgetIdTransitionsToContent() = runTest(mainDispatcher) {
-        val budget = Budget("b-1", TransactionCategory.FOOD, 100.0, 0L, 0L)
+        val budget = Budget("b-1", ExpenseCategory.FOOD, 100.0, 0L, 0L)
         val detail = BudgetDetail(
             budgetWithSpending = budget.withSpending(0.0),
             transactions = emptyList(),
@@ -96,7 +96,7 @@ class BudgetDetailViewModelTest {
     @Test
     fun deleteBudgetCallsRepository() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = listOf(
-            Budget("b-1", TransactionCategory.FOOD, 100.0, 0L, 0L),
+            Budget("b-1", ExpenseCategory.FOOD, 100.0, 0L, 0L),
         ))
         val viewModel = BudgetDetailViewModel(
             budgetRepository = budgetRepo,

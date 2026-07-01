@@ -1,17 +1,15 @@
 package com.expense.tracker.feature.budget.impl
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.domain.AppError
 
 data class BudgetState(
     val contentState: BudgetContentState = BudgetContentState.Loading,
-    val showFormSheet: Boolean = false,
     val formMode: BudgetFormMode = BudgetFormMode.Create,
     val editingBudgetId: String? = null,
-    val selectedCategory: TransactionCategory = TransactionCategory.OTHER,
+    val selectedCategory: ExpenseCategory = ExpenseCategory.OTHER_EXPENSE,
     val categoryMenuExpanded: Boolean = false,
     val limitText: String = "",
-    val availableCategories: List<TransactionCategory> = TransactionCategory.entries.toList(),
     val deleteTargetId: String? = null,
 )
 

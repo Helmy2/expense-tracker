@@ -388,7 +388,7 @@ private fun BudgetDetailBody(
                     detail.transactions.forEach { tx ->
                         ListItem(
                             headline = tx.formattedAmount,
-                            supportingText = "${tx.category.asLabel()} \u00B7 ${tx.formattedDate}",
+                            supportingText = "${tx.category.asCategoryLabel()} \u00B7 ${tx.formattedDate}",
                             leadingContent = {
                                 Box(
                                     modifier = Modifier.size(40.dp).clip(CircleShape)

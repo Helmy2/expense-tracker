@@ -18,8 +18,8 @@ final class MockRecurringRepositoryBridge: RecurringRepositoryBridge {
     var togglePauseCallCount = 0
     var lastDeletedId: String?
     var lastToggledId: String?
-    var lastCreated: (amount: Double, type: ExpenseType, category: ExpenseCategory, note: String, frequency: RecurringFrequencySwift)?
-    var lastUpdated: (id: String, amount: Double, type: ExpenseType, category: ExpenseCategory, note: String, frequency: RecurringFrequencySwift)?
+    var lastCreated: (amount: Double, type: ExpenseType, category: String, note: String, frequency: RecurringFrequencySwift)?
+    var lastUpdated: (id: String, amount: Double, type: ExpenseType, category: String, note: String, frequency: RecurringFrequencySwift)?
 
     func loadTemplates() async throws -> [RecurringTemplateItem] {
         if let error = loadTemplatesError { throw error }
@@ -34,7 +34,7 @@ final class MockRecurringRepositoryBridge: RecurringRepositoryBridge {
     func createTemplate(
         amount: Double,
         type: ExpenseType,
-        category: ExpenseCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequencySwift,
         startDateMillis: Int64,
@@ -57,7 +57,7 @@ final class MockRecurringRepositoryBridge: RecurringRepositoryBridge {
         id: String,
         amount: Double,
         type: ExpenseType,
-        category: ExpenseCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequencySwift,
         startDateMillis: Int64,
@@ -113,7 +113,7 @@ func makeRecurringTemplateItem(
     id: String = "recurring-1",
     amount: Double = 100.0,
     type: ExpenseType = .expense,
-    category: ExpenseCategory = .food,
+    category: String = ExpenseCategory.food.rawValue,
     note: String = "Template note",
     frequency: RecurringFrequencySwift = .monthly,
     startDateMillis: Int64 = 1_720_000_000_000,
@@ -143,7 +143,7 @@ func makeUpcomingRecurringData(
     templateId: String = "upcoming-1",
     amount: Double = 50.0,
     type: ExpenseType = .expense,
-    category: ExpenseCategory = .entertainment,
+    category: String = ExpenseCategory.entertainment.rawValue,
     note: String = "Netflix",
     frequency: RecurringFrequencySwift = .monthly,
     nextDueDateMillis: Int64 = 1_725_000_000_000

@@ -1,6 +1,6 @@
 package com.expense.tracker.feature.budget.domain.model
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -11,13 +11,13 @@ class BudgetTest {
     fun budgetConstruction() {
         val budget = Budget(
             id = "b1",
-            category = TransactionCategory.FOOD,
+            category = ExpenseCategory.FOOD,
             monthlyLimit = 500.0,
             createdAtMillis = 1000L,
             updatedAtMillis = 2000L,
         )
         assertEquals("b1", budget.id)
-        assertEquals(TransactionCategory.FOOD, budget.category)
+        assertEquals(ExpenseCategory.FOOD, budget.category)
         assertEquals(500.0, budget.monthlyLimit)
         assertEquals(1000L, budget.createdAtMillis)
         assertEquals(2000L, budget.updatedAtMillis)
@@ -69,7 +69,7 @@ class BudgetTest {
     fun withSpendingBasicComputation() {
         val budget = Budget(
             id = "b1",
-            category = TransactionCategory.FOOD,
+            category = ExpenseCategory.FOOD,
             monthlyLimit = 400.0,
             createdAtMillis = 0L,
             updatedAtMillis = 0L,
@@ -85,7 +85,7 @@ class BudgetTest {
     fun withSpendingOverBudget() {
         val budget = Budget(
             id = "b1",
-            category = TransactionCategory.TRANSPORTATION,
+            category = ExpenseCategory.TRANSPORTATION,
             monthlyLimit = 200.0,
             createdAtMillis = 0L,
             updatedAtMillis = 0L,
@@ -101,7 +101,7 @@ class BudgetTest {
     fun withSpendingZeroLimit() {
         val budget = Budget(
             id = "b1",
-            category = TransactionCategory.OTHER,
+            category = ExpenseCategory.OTHER_EXPENSE,
             monthlyLimit = 0.0,
             createdAtMillis = 0L,
             updatedAtMillis = 0L,
@@ -116,7 +116,7 @@ class BudgetTest {
     fun withSpendingExactThresholds() {
         val budget = Budget(
             id = "b1",
-            category = TransactionCategory.SHOPPING,
+            category = ExpenseCategory.SHOPPING,
             monthlyLimit = 1000.0,
             createdAtMillis = 0L,
             updatedAtMillis = 0L,
@@ -139,7 +139,7 @@ class BudgetTest {
     fun withSpendingZeroSpent() {
         val budget = Budget(
             id = "b1",
-            category = TransactionCategory.ENTERTAINMENT,
+            category = ExpenseCategory.ENTERTAINMENT,
             monthlyLimit = 300.0,
             createdAtMillis = 0L,
             updatedAtMillis = 0L,

@@ -20,7 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.budget_category_label
 import com.expense.tracker.shared.core.strings.budget_form_create_title
@@ -114,11 +114,11 @@ fun BudgetFormContent(
 
 @Composable
 private fun CategoryDropdown(
-    selectedCategory: TransactionCategory,
+    selectedCategory: ExpenseCategory,
     expanded: Boolean,
     onToggle: () -> Unit,
     onDismiss: () -> Unit,
-    onSelect: (TransactionCategory) -> Unit,
+    onSelect: (ExpenseCategory) -> Unit,
 ) {
     BoxWithConstraints {
         TextField(
@@ -150,7 +150,7 @@ private fun CategoryDropdown(
             onDismissRequest = onDismiss,
             modifier = Modifier.width(maxWidth),
         ) {
-            TransactionCategory.entries.forEach { category ->
+            ExpenseCategory.entries.forEach { category ->
                 Box(
                     modifier = Modifier.fillMaxWidth().clickable(
                         interactionSource = remember { MutableInteractionSource() },

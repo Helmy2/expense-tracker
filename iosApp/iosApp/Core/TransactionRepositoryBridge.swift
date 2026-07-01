@@ -3,7 +3,7 @@ import SharedCore
 
 protocol TransactionRepositoryBridge {
     func loadTransactions() async throws -> [ExpenseItem]
-    func addTransaction(amount: Double, type: ExpenseType, category: ExpenseCategory, note: String) async throws -> ExpenseItem
+    func addTransaction(amount: Double, type: ExpenseType, category: String, note: String) async throws -> ExpenseItem
     func deleteTransaction(id: String) async throws
 }
 
@@ -19,11 +19,11 @@ final class SharedTransactionRepositoryBridge: TransactionRepositoryBridge {
         return kotlinTransactions.map { mapFromKotlin($0) }
     }
 
-    func addTransaction(amount: Double, type: ExpenseType, category: ExpenseCategory, note: String) async throws -> ExpenseItem {
+    func addTransaction(amount: Double, type: ExpenseType, category: String, note: String) async throws -> ExpenseItem {
         let kotlinTransaction = try await repository.addTransactionOrThrow(
             amount: amount,
             type: type.toKotlinType(),
-            category: category.toKotlinCategory(),
+            category: category,
             note: note
         )
         return mapFromKotlin(kotlinTransaction)
@@ -38,12 +38,14 @@ final class SharedTransactionRepositoryBridge: TransactionRepositoryBridge {
             id: transaction.id,
             amount: transaction.amount,
             type: transaction.type.asSwiftType,
-            category: transaction.category.asSwiftCategory,
+            category: transaction.category,
             note: transaction.note,
             createdAtMillis: transaction.createdAtMillis
         )
     }
 }
+
+// MARK: - Kotlin Type Mappings
 
 extension ExpenseType {
     func toKotlinType() -> SharedCore.TransactionType {
@@ -54,47 +56,12 @@ extension ExpenseType {
     }
 }
 
-extension ExpenseCategory {
-    func toKotlinCategory() -> SharedCore.TransactionCategory {
-        switch self {
-        case .food: return SharedCore.TransactionCategory.food
-        case .rent: return SharedCore.TransactionCategory.rent
-        case .salary: return SharedCore.TransactionCategory.salary
-        case .entertainment: return SharedCore.TransactionCategory.entertainment
-        case .transportation: return SharedCore.TransactionCategory.transportation
-        case .utilities: return SharedCore.TransactionCategory.utilities
-        case .shopping: return SharedCore.TransactionCategory.shopping
-        case .healthcare: return SharedCore.TransactionCategory.healthcare
-        case .education: return SharedCore.TransactionCategory.education
-        case .other: return SharedCore.TransactionCategory.other
-        }
-    }
-}
-
 extension SharedCore.TransactionType {
     var asSwiftType: ExpenseType {
         switch self {
         case .income: return .income
         case .expense: return .expense
         @unknown default: return .expense
-        }
-    }
-}
-
-extension SharedCore.TransactionCategory {
-    var asSwiftCategory: ExpenseCategory {
-        switch self {
-        case .food: return .food
-        case .rent: return .rent
-        case .salary: return .salary
-        case .entertainment: return .entertainment
-        case .transportation: return .transportation
-        case .utilities: return .utilities
-        case .shopping: return .shopping
-        case .healthcare: return .healthcare
-        case .education: return .education
-        case .other: return .other
-        @unknown default: return .other
         }
     }
 }

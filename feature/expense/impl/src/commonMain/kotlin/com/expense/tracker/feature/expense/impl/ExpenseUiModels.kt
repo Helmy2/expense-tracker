@@ -1,11 +1,9 @@
 package com.expense.tracker.feature.expense.impl
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
-
 data class ExpenseTransactionUi(
     val id: String,
     val formattedAmount: String,
-    val category: TransactionCategory,
+    val category: String,
     val formattedDate: String,
     val isIncome: Boolean,
 )
@@ -19,7 +17,7 @@ data class DashboardSummaryUi(
 data class UpcomingRecurringUi(
     val templateId: String,
     val formattedAmount: String,
-    val category: TransactionCategory,
+    val category: String,
     val frequencyLabel: String,
     val nextDueDateFormatted: String,
     val isIncome: Boolean,

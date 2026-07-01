@@ -27,20 +27,23 @@ struct ExpenseFormView: View {
                     Text(type.displayName).tag(type)
                 }
             }
+            .onChange(of: viewModel.formState.selectedType) { _, _ in
+                viewModel.formState.resetCategoryForType()
+            }
 
             Text("expense_ios_category_label")
                 .font(.dreamLabelLarge)
                 .foregroundStyle(colors.onSurfaceVariant)
 
             Menu {
-                ForEach(ExpenseCategory.allCases) { category in
-                    Button(category.displayName) {
-                        viewModel.formState.selectedCategory = category
+                ForEach(categoriesForType(viewModel.formState.selectedType), id: \.rawValue) { item in
+                    Button(item.displayName) {
+                        viewModel.formState.selectedCategory = item.rawValue
                     }
                 }
             } label: {
                 HStack {
-                    Text(viewModel.formState.selectedCategory.displayName)
+                    Text(viewModel.formState.categoryDisplayName)
                         .foregroundStyle(colors.onSurface)
                     Spacer()
                     Image(systemName: "chevron.down")

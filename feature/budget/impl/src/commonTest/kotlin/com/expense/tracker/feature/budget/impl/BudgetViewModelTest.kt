@@ -7,7 +7,7 @@ import com.expense.tracker.feature.budget.domain.model.BudgetStatus
 import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
 import com.expense.tracker.feature.budget.domain.model.withSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.testing.FakeTimeProvider
@@ -114,7 +114,7 @@ class BudgetViewModelTest {
         advanceUntilIdle()
 
         val contentState = assertIs<BudgetContentState.Content>(viewModel.state.value.contentState)
-        val foodEntry = contentState.budgets.find { it.category == TransactionCategory.FOOD }
+        val foodEntry = contentState.budgets.find { it.category == ExpenseCategory.FOOD }
         assertTrue(foodEntry != null)
         assertEquals("$45.00", foodEntry.formattedSpent)
     }
@@ -123,7 +123,7 @@ class BudgetViewModelTest {
     fun loadComputesCorrectStatus() = runTest(mainDispatcher) {
         val budget = Budget(
             id = "b-1",
-            category = TransactionCategory.FOOD,
+            category = ExpenseCategory.FOOD,
             monthlyLimit = 50.0,
             createdAtMillis = 0L,
             updatedAtMillis = 0L,
@@ -148,7 +148,7 @@ class BudgetViewModelTest {
     }
 
     @Test
-    fun saveBudgetWithValidInputCreatesAndReloads() = runTest(mainDispatcher) {
+    fun saveBudgetWithValidInputCreates() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
@@ -158,15 +158,13 @@ class BudgetViewModelTest {
         viewModel.onAction(BudgetAction.Load)
         advanceUntilIdle()
 
-        viewModel.onAction(BudgetAction.StartCreate(emptyList()))
+        viewModel.onAction(BudgetAction.SetBudget(null))
         viewModel.onAction(BudgetAction.LimitChanged("100"))
-        viewModel.onAction(BudgetAction.CategorySelected(TransactionCategory.FOOD))
+        viewModel.onAction(BudgetAction.CategorySelected(ExpenseCategory.FOOD))
         viewModel.onAction(BudgetAction.SaveBudget)
         advanceUntilIdle()
 
         assertEquals(1, budgetRepo.createCount)
-        assertEquals("", viewModel.state.value.limitText)
-        assertEquals(false, viewModel.state.value.showFormSheet)
     }
 
     @Test
@@ -181,9 +179,9 @@ class BudgetViewModelTest {
         advanceUntilIdle()
 
         viewModel.eventFlow.test {
-            viewModel.onAction(BudgetAction.StartCreate(emptyList()))
+            viewModel.onAction(BudgetAction.SetBudget(null))
             viewModel.onAction(BudgetAction.LimitChanged("100"))
-            viewModel.onAction(BudgetAction.CategorySelected(TransactionCategory.FOOD))
+            viewModel.onAction(BudgetAction.CategorySelected(ExpenseCategory.FOOD))
             viewModel.onAction(BudgetAction.SaveBudget)
             advanceUntilIdle()
 
@@ -200,7 +198,7 @@ class BudgetViewModelTest {
             mapper = fakeBudgetMapper(),
         )
 
-        viewModel.onAction(BudgetAction.StartCreate(emptyList()))
+        viewModel.onAction(BudgetAction.SetBudget(null))
         viewModel.onAction(BudgetAction.LimitChanged("0"))
         viewModel.onAction(BudgetAction.SaveBudget)
         advanceUntilIdle()
@@ -217,7 +215,7 @@ class BudgetViewModelTest {
             mapper = fakeBudgetMapper(),
         )
 
-        viewModel.onAction(BudgetAction.StartCreate(emptyList()))
+        viewModel.onAction(BudgetAction.SetBudget(null))
         viewModel.onAction(BudgetAction.LimitChanged("-5"))
         viewModel.onAction(BudgetAction.SaveBudget)
         advanceUntilIdle()
@@ -234,7 +232,7 @@ class BudgetViewModelTest {
             mapper = fakeBudgetMapper(),
         )
 
-        viewModel.onAction(BudgetAction.StartCreate(emptyList()))
+        viewModel.onAction(BudgetAction.SetBudget(null))
         viewModel.onAction(BudgetAction.LimitChanged("abc"))
         viewModel.onAction(BudgetAction.SaveBudget)
         advanceUntilIdle()
@@ -313,9 +311,9 @@ class BudgetViewModelTest {
         advanceUntilIdle()
         assertTrue(viewModel.state.value.categoryMenuExpanded)
 
-        viewModel.onAction(BudgetAction.CategorySelected(TransactionCategory.FOOD))
+        viewModel.onAction(BudgetAction.CategorySelected(ExpenseCategory.FOOD))
         advanceUntilIdle()
-        assertEquals(TransactionCategory.FOOD, viewModel.state.value.selectedCategory)
+        assertEquals(ExpenseCategory.FOOD, viewModel.state.value.selectedCategory)
         assertEquals(false, viewModel.state.value.categoryMenuExpanded)
     }
 
@@ -333,58 +331,60 @@ class BudgetViewModelTest {
     }
 
     @Test
-    fun startCreateSetsFormState() = runTest(mainDispatcher) {
+    fun setBudgetNullSetsCreateMode() = runTest(mainDispatcher) {
         val viewModel = BudgetViewModel(
             budgetRepository = fakeBudgetRepository(budgets = emptyList()),
             timeProvider = FakeTimeProvider(),
             mapper = fakeBudgetMapper(),
         )
 
-        viewModel.onAction(BudgetAction.StartCreate(listOf(TransactionCategory.FOOD)))
+        viewModel.onAction(BudgetAction.SetBudget(null))
         advanceUntilIdle()
 
-        assertEquals(true, viewModel.state.value.showFormSheet)
         assertEquals(BudgetFormMode.Create, viewModel.state.value.formMode)
-        assertEquals(TransactionCategory.OTHER, viewModel.state.value.selectedCategory)
+        assertEquals(null, viewModel.state.value.editingBudgetId)
+        assertEquals(ExpenseCategory.OTHER_EXPENSE, viewModel.state.value.selectedCategory)
+        assertEquals("", viewModel.state.value.limitText)
     }
 
     @Test
-    fun startEditSetsFormState() = runTest(mainDispatcher) {
+    fun setBudgetWithIdLoadsBudgetAndSetsEditMode() = runTest(mainDispatcher) {
+        val budget = Budget(
+            id = "b-1",
+            category = ExpenseCategory.FOOD,
+            monthlyLimit = 100.0,
+            createdAtMillis = 0L,
+            updatedAtMillis = 0L,
+        )
+        val budgetRepo = fakeBudgetRepository(budgets = listOf(budget))
         val viewModel = BudgetViewModel(
-            budgetRepository = fakeBudgetRepository(budgets = emptyList()),
+            budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
             mapper = fakeBudgetMapper(),
         )
 
-        viewModel.onAction(BudgetAction.StartEdit("b-1", 100.0, TransactionCategory.FOOD))
+        viewModel.onAction(BudgetAction.SetBudget("b-1"))
         advanceUntilIdle()
 
-        assertEquals(true, viewModel.state.value.showFormSheet)
         assertEquals(BudgetFormMode.Edit, viewModel.state.value.formMode)
         assertEquals("b-1", viewModel.state.value.editingBudgetId)
-        assertEquals(100.0, viewModel.state.value.limitText.toDouble())
-        assertEquals(TransactionCategory.FOOD, viewModel.state.value.selectedCategory)
+        assertEquals("100.0", viewModel.state.value.limitText)
+        assertEquals(ExpenseCategory.FOOD, viewModel.state.value.selectedCategory)
     }
 
     @Test
-    fun dismissFormSheetResetsFormState() = runTest(mainDispatcher) {
+    fun setBudgetWithUnknownIdShowsError() = runTest(mainDispatcher) {
+        val budgetRepo = fakeBudgetRepository(budgets = emptyList())
         val viewModel = BudgetViewModel(
-            budgetRepository = fakeBudgetRepository(budgets = emptyList()),
+            budgetRepository = budgetRepo,
             timeProvider = FakeTimeProvider(),
             mapper = fakeBudgetMapper(),
         )
 
-        viewModel.onAction(BudgetAction.StartCreate(emptyList()))
-        viewModel.onAction(BudgetAction.LimitChanged("100"))
+        viewModel.onAction(BudgetAction.SetBudget("nonexistent"))
         advanceUntilIdle()
 
-        assertEquals(true, viewModel.state.value.showFormSheet)
-
-        viewModel.onAction(BudgetAction.DismissFormSheet)
-        advanceUntilIdle()
-
-        assertEquals(false, viewModel.state.value.showFormSheet)
-        assertEquals("", viewModel.state.value.limitText)
+        assertIs<BudgetContentState.Error>(viewModel.state.value.contentState)
     }
 
     @Test
@@ -407,8 +407,8 @@ class BudgetViewModelTest {
 }
 
 private fun sampleBudgets(): List<Budget> = listOf(
-    Budget("b-1", TransactionCategory.FOOD, 100.0, 0L, 0L),
-    Budget("b-2", TransactionCategory.TRANSPORTATION, 50.0, 0L, 0L),
+    Budget("b-1", ExpenseCategory.FOOD, 100.0, 0L, 0L),
+    Budget("b-2", ExpenseCategory.TRANSPORTATION, 50.0, 0L, 0L),
 )
 
 private fun sampleBudgetsWithSpending(): List<BudgetWithSpending> = sampleBudgets().map {
@@ -440,11 +440,11 @@ internal class FakeBudgetRepository(
     override suspend fun loadBudgetById(id: String): Result<Budget?> =
         Result.Success(budgets.find { it.id == id })
 
-    override suspend fun loadBudgetByCategory(category: TransactionCategory): Result<Budget?> =
+    override suspend fun loadBudgetByCategory(category: ExpenseCategory): Result<Budget?> =
         Result.Success(budgets.find { it.category == category })
 
     override suspend fun createBudget(
-        category: TransactionCategory,
+        category: ExpenseCategory,
         monthlyLimit: Double,
     ): Result<Budget> {
         createCount++

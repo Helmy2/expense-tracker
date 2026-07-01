@@ -1,0 +1,316 @@
+name: split-categories
+goal: >
+  Split the single TransactionCategory enum into separate IncomeCategory and
+  ExpenseCategory enums so that income and expense transactions each have
+  their own relevant set of categories. Update all layers (domain, data,
+  presentation, iOS bridge) to use the type-appropriate category enum.
+templateArchitecture: modular-hybrid
+platforms:
+  - android
+  - ios
+iosUiStrategy: swiftui
+backend:
+  enabled: false
+
+entities:
+  IncomeCategory:
+    values:
+      - SALARY
+      - FREELANCE
+      - INVESTMENT
+      - BUSINESS
+      - RENTAL
+      - GIFT
+      - REFUND
+      - OTHER_INCOME
+    description: Categories relevant to income transactions only.
+
+  ExpenseCategory:
+    values:
+      - FOOD
+      - RENT
+      - ENTERTAINMENT
+      - TRANSPORTATION
+      - UTILITIES
+      - SHOPPING
+      - HEALTHCARE
+      - EDUCATION
+      - BILLS
+      - OTHER_EXPENSE
+    description: Categories relevant to expense transactions only.
+
+  Transaction:
+    fields:
+      - name: id
+        type: String
+      - name: amount
+        type: Double
+      - name: type
+        type: TransactionType
+        enum: [INCOME, EXPENSE]
+      - name: category
+        type: Union<IncomeCategory, ExpenseCategory>
+        description: >
+          When type is INCOME, category is IncomeCategory.
+          When type is EXPENSE, category is ExpenseCategory.
+          The Room entity stores this as a String; the domain model
+          resolves it to the correct enum based on type.
+      - name: note
+        type: String
+      - name: createdAtMillis
+        type: Long
+        unit: milliseconds
+
+  Budget:
+    fields:
+      - name: id
+        type: String
+      - name: category
+        type: ExpenseCategory
+        description: Budgets track spending against expense categories only.
+      - name: monthlyLimit
+        type: Double
+      - name: createdAtMillis
+        type: Long
+      - name: updatedAtMillis
+        type: Long
+
+  RecurringTemplate:
+    fields:
+      - name: id
+        type: String
+      - name: amount
+        type: Double
+      - name: type
+        type: TransactionType
+      - name: category
+        type: Union<IncomeCategory, ExpenseCategory>
+        description: Same type-based category resolution as Transaction.
+      - name: note
+        type: String
+      - name: frequency
+        type: RecurringFrequency
+      - name: startDateMillis
+        type: Long
+      - name: endDateMillis
+        type: Long?
+      - name: isPaused
+        type: Boolean
+      - name: lastGeneratedDateMillis
+        type: Long?
+      - name: createdAtMillis
+        type: Long
+      - name: updatedAtMillis
+        type: Long
+
+actions:
+  expense:
+    - name: CreateTransaction
+      inputs:
+        - amount: Double
+        - type: TransactionType
+        - category: Union<IncomeCategory, ExpenseCategory>
+        - note: String
+      description: >
+        Create a transaction. The category must match the type:
+        IncomeCategory when type is INCOME, ExpenseCategory when type is EXPENSE.
+
+    - name: DeleteTransaction
+      inputs:
+        - id: String
+
+  budget:
+    - name: CreateBudget
+      inputs:
+        - category: ExpenseCategory
+        - monthlyLimit: Double
+      description: Budgets are always for expense categories.
+
+    - name: UpdateBudget
+      inputs:
+        - id: String
+        - monthlyLimit: Double
+
+  recurring:
+    - name: CreateRecurringTemplate
+      inputs:
+        - amount: Double
+        - type: TransactionType
+        - category: Union<IncomeCategory, ExpenseCategory>
+        - note: String
+        - frequency: RecurringFrequency
+        - startDateMillis: Long
+        - endDateMillis: Long?
+
+screens:
+  expense:
+    - name: ExpenseForm
+      description: >
+        Transaction creation form. When user selects INCOME type, the
+        category picker shows IncomeCategory entries. When user selects
+        EXPENSE type, the category picker shows ExpenseCategory entries.
+        Switching type resets the selected category to the first entry
+        of the new type.
+
+    - name: ExpenseList
+      description: >
+        Transaction list. Each row displays the type-appropriate category
+        label (IncomeCategory or ExpenseCategory).
+
+    - name: ExpenseDashboard
+      description: >
+        Summary dashboard. Income total and expense total use their
+        respective category sets.
+
+  budget:
+    - name: BudgetForm
+      description: >
+        Budget creation form. Category picker shows only ExpenseCategory
+        entries (budgets are expense-only).
+
+    - name: BudgetList
+      description: >
+        Budget list. Each card displays ExpenseCategory label.
+
+    - name: BudgetDetail
+      description: >
+        Per-budget transaction detail. Filters transactions by
+        ExpenseCategory within current month.
+
+  recurring:
+    - name: RecurringForm
+      description: >
+        Recurring template form. Category picker adapts to selected
+        transaction type (IncomeCategory or ExpenseCategory).
+
+    - name: RecurringList
+      description: >
+        Recurring template list. Displays type-appropriate category label.
+
+states:
+  expense:
+    ExpenseFormState:
+      fields:
+        - amount: String
+        - selectedType: TransactionType
+        - selectedCategory: Union<IncomeCategory, ExpenseCategory>
+        - categoryMenuExpanded: Boolean
+        - note: String
+        - isSaving: Boolean
+      description: >
+        selectedCategory is typed as Union<IncomeCategory, ExpenseCategory>.
+        When selectedType changes, selectedCategory resets to the first
+        entry of the new type's category enum.
+
+    ExpenseListState:
+      contentState: Loading | Empty | Content(List<ExpenseItem>) | Error(String)
+
+  budget:
+    BudgetFormState:
+      fields:
+        - selectedCategory: ExpenseCategory
+        - categoryMenuExpanded: Boolean
+        - monthlyLimit: String
+        - note: String
+        - isSaving: Boolean
+      description: Category picker iterates ExpenseCategory.entries only.
+
+    BudgetListState:
+      contentState: Loading | Empty | Content(List<BudgetWithSpendingItem>) | Error(String)
+
+  recurring:
+    RecurringFormState:
+      fields:
+        - amount: String
+        - selectedType: TransactionType
+        - selectedCategory: Union<IncomeCategory, ExpenseCategory>
+        - categoryMenuExpanded: Boolean
+        - note: String
+        - frequency: RecurringFrequency
+        - startDateMillis: Long
+        - endDateMillis: Long?
+        - isSaving: Boolean
+      description: Category adapts to selected type.
+
+timeSensitiveBehavior:
+  usesTimeProvider: true
+  details: >
+    All timestamp fields (createdAtMillis, updatedAtMillis, startDateMillis,
+    endDateMillis, lastGeneratedDateMillis) use TimeProvider.nowMillis().
+    Budget period calculation uses TimeProvider.currentYearMonth().
+    No direct Clock.System.now() allowed.
+
+storage:
+  strategy: shared-room-database
+  owner: shared/core/data
+  tables:
+    - name: transactions
+      owner: feature/expense
+      columns:
+        - name: category
+          type: String
+          description: >
+            Stores the category as a String (e.g., "SALARY", "FOOD").
+            The domain layer resolves to IncomeCategory or ExpenseCategory
+            based on the transaction type.
+    - name: budgets
+      owner: feature/budget
+      columns:
+        - name: category
+          type: String
+          description: Stores ExpenseCategory.name as String.
+    - name: recurring_templates
+      owner: feature/recurring-transactions
+      columns:
+        - name: category
+          type: String
+          description: >
+            Stores category as String. Domain resolves to
+            IncomeCategory or ExpenseCategory based on type.
+  migrationNote: >
+    Existing data uses the old TransactionCategory enum names. The new
+    ExpenseCategory keeps most of the same names (FOOD, RENT, etc.)
+    with SALARY moving to IncomeCategory and BILLS/OTHER_EXPENSE added.
+    For MVP, destructive recovery (clear and re-seed) is acceptable.
+    Production apps should add a Room migration to map old values.
+
+designExpectations:
+  - Use DreamTheme design-system components (buttons, text fields, cards, menus, sheets, dialogs)
+  - Category picker uses a design-system Menu dropdown
+  - Category labels use the CategoryLabel composable with localized strings
+  - Type toggle uses SegmentedButton (Android) or Picker (iOS)
+  - Form uses compact single-column layout
+
+requiredTests:
+  domain:
+    - name: IncomeCategory enum has all expected values
+    - name: ExpenseCategory enum has all expected values
+    - name: Transaction model construction with IncomeCategory
+    - name: Transaction model construction with ExpenseCategory
+    - name: Category resolution by type (income vs expense)
+    - name: Budget model requires ExpenseCategory
+
+  data:
+    - name: TransactionMapper maps IncomeCategory to/from entity
+    - name: TransactionMapper maps ExpenseCategory to/from entity
+    - name: BudgetMapper maps ExpenseCategory to/from entity
+    - name: RoomTransactionRepository.addTransaction with IncomeCategory
+    - name: RoomTransactionRepository.addTransaction with ExpenseCategory
+    - name: RoomBudgetRepository filters by ExpenseCategory
+
+  presentation:
+    - name: ExpenseViewModel loading state
+    - name: ExpenseViewModel create transaction with IncomeCategory
+    - name: ExpenseViewModel create transaction with ExpenseCategory
+    - name: ExpenseViewModel category resets on type switch
+    - name: BudgetViewModel create budget with ExpenseCategory
+    - name: BudgetViewModel category picker shows ExpenseCategory only
+    - name: RecurringViewModel category adapts to type
+
+  ios:
+    - name: IncomeCategory Swift enum matches Kotlin enum
+    - name: ExpenseCategory Swift enum matches Kotlin enum
+    - name: Bridge mapping IncomeCategory to/from Kotlin
+    - name: Bridge mapping ExpenseCategory to/from Kotlin
+    - name: ExpenseListViewModel category state on type switch
+    - name: BudgetListViewModel category picker filtering

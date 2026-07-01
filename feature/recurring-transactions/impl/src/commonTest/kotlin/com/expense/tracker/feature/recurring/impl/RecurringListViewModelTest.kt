@@ -1,7 +1,8 @@
 package com.expense.tracker.feature.recurring.impl
 
 import app.cash.turbine.test
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
+import com.expense.tracker.feature.expense.domain.model.IncomeCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.feature.recurring.domain.model.RecurringTemplate
@@ -155,7 +156,7 @@ private fun sampleTemplates(): List<RecurringTemplate> = listOf(
         id = "rt-1",
         amount = 1500.0,
         type = TransactionType.INCOME,
-        category = TransactionCategory.SALARY,
+        category = IncomeCategory.SALARY.name,
         note = "Monthly salary",
         frequency = RecurringFrequency.MONTHLY,
         startDateMillis = 1700000000000L,
@@ -169,7 +170,7 @@ private fun sampleTemplates(): List<RecurringTemplate> = listOf(
         id = "rt-2",
         amount = 45.0,
         type = TransactionType.EXPENSE,
-        category = TransactionCategory.ENTERTAINMENT,
+        category = ExpenseCategory.ENTERTAINMENT.name,
         note = "Netflix",
         frequency = RecurringFrequency.MONTHLY,
         startDateMillis = 1700000000000L,
@@ -200,7 +201,7 @@ private class FakeRecurringRepository(
     override suspend fun createTemplate(
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequency,
         startDateMillis: Long,
@@ -228,7 +229,7 @@ private class FakeRecurringRepository(
         id: String,
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequency,
         startDateMillis: Long,
@@ -249,7 +250,7 @@ private class FakeRecurringRepository(
             templates[index] = updated
             return Result.Success(updated)
         }
-        return Result.Failure(AppError.Message("Not found"))
+        return Result.Failure(com.expense.tracker.shared.core.domain.AppError.Message("Not found"))
     }
 
     override suspend fun deleteTemplate(id: String): Result<Unit> {
@@ -266,7 +267,7 @@ private class FakeRecurringRepository(
             templates[index] = toggled
             return Result.Success(toggled)
         }
-        return Result.Failure(AppError.Message("Not found"))
+        return Result.Failure(com.expense.tracker.shared.core.domain.AppError.Message("Not found"))
     }
 
     override suspend fun processDueRecurring(): Result<Int> =

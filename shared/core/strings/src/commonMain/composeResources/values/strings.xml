@@ -24,7 +24,18 @@
     <string name="expense_category_shopping">Shopping</string>
     <string name="expense_category_healthcare">Healthcare</string>
     <string name="expense_category_education">Education</string>
-    <string name="expense_category_other">Other</string>
+    <string name="expense_category_bills">Bills</string>
+    <string name="expense_category_other_expense">Other</string>
+
+    <!-- Income category labels -->
+    <string name="income_category_salary">Salary</string>
+    <string name="income_category_freelance">Freelance</string>
+    <string name="income_category_investment">Investment</string>
+    <string name="income_category_business">Business</string>
+    <string name="income_category_rental">Rental</string>
+    <string name="income_category_gift">Gift</string>
+    <string name="income_category_refund">Refund</string>
+    <string name="income_category_other_income">Other</string>
     <string name="expense_note_label">Note (optional)</string>
     <string name="expense_balance_label">Balance</string>
     <string name="expense_income_label">Income</string>

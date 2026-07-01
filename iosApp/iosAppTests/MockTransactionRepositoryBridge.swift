@@ -16,7 +16,7 @@ final class MockTransactionRepositoryBridge: TransactionRepositoryBridge {
         return transactionsToReturn
     }
 
-    func addTransaction(amount: Double, type: ExpenseType, category: ExpenseCategory, note: String) async throws -> ExpenseItem {
+    func addTransaction(amount: Double, type: ExpenseType, category: String, note: String) async throws -> ExpenseItem {
         if let addTransactionError { throw addTransactionError }
         addCallCount += 1
         let item = ExpenseItem(
@@ -42,7 +42,7 @@ func makeExpenseItem(
     id: String = "expense-1",
     amount: Double = 45.0,
     type: ExpenseType = .expense,
-    category: ExpenseCategory = .food,
+    category: String = ExpenseCategory.food.rawValue,
     note: String = "Lunch",
     createdAtMillis: Int64 = 1_720_000_000_000
 ) -> ExpenseItem {

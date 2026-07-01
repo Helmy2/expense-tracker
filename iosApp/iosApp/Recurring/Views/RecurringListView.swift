@@ -152,7 +152,7 @@ struct RecurringRowView: View {
                     .font(.dreamTitleMedium)
                     .foregroundStyle(colors.onSurface)
 
-                Text("\(template.category.displayName) \u{00B7} \(template.displayFrequency)")
+                Text("\(template.categoryDisplayName) \u{00B7} \(template.displayFrequency)")
                     .font(.dreamBodyMedium)
                     .foregroundStyle(colors.onSurfaceVariant)
 

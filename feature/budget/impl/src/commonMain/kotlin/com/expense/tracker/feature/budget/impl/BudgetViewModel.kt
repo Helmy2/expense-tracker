@@ -1,7 +1,7 @@
 package com.expense.tracker.feature.budget.impl
 
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.TimeProvider
@@ -18,38 +18,7 @@ class BudgetViewModel(
     override suspend fun handleAction(action: BudgetAction) {
         when (action) {
             is BudgetAction.Load -> load()
-            is BudgetAction.ToggleFormSheet -> updateState {
-                it.copy(showFormSheet = !it.showFormSheet)
-            }
-            is BudgetAction.DismissFormSheet -> updateState {
-                it.copy(
-                    showFormSheet = false,
-                    formMode = BudgetFormMode.Create,
-                    editingBudgetId = null,
-                    limitText = "",
-                    selectedCategory = TransactionCategory.OTHER,
-                )
-            }
-            is BudgetAction.StartCreate -> updateState {
-                it.copy(
-                    showFormSheet = true,
-                    formMode = BudgetFormMode.Create,
-                    editingBudgetId = null,
-                    selectedCategory = TransactionCategory.OTHER,
-                    limitText = "",
-                    availableCategories = action.availableCategories,
-                )
-            }
-            is BudgetAction.StartEdit -> updateState {
-                it.copy(
-                    showFormSheet = true,
-                    formMode = BudgetFormMode.Edit,
-                    editingBudgetId = action.budgetId,
-                    selectedCategory = action.category,
-                    limitText = action.currentLimit.toString(),
-                    availableCategories = emptyList(),
-                )
-            }
+            is BudgetAction.SetBudget -> setBudget(action.budgetId)
             is BudgetAction.CategorySelected -> updateState {
                 it.copy(selectedCategory = action.category, categoryMenuExpanded = false)
             }
@@ -69,6 +38,43 @@ class BudgetViewModel(
             is BudgetAction.ConfirmDelete -> deleteBudget()
             is BudgetAction.CancelDelete -> updateState {
                 it.copy(deleteTargetId = null)
+            }
+        }
+    }
+
+    private suspend fun setBudget(budgetId: String?) {
+        if (budgetId == null) {
+            updateState {
+                it.copy(
+                    formMode = BudgetFormMode.Create,
+                    editingBudgetId = null,
+                    selectedCategory = ExpenseCategory.OTHER_EXPENSE,
+                    limitText = "",
+                )
+            }
+        } else {
+            updateState { it.copy(contentState = BudgetContentState.Loading) }
+            when (val result = budgetRepository.loadBudgetById(budgetId)) {
+                is Result.Success -> {
+                    val budget = result.value
+                    if (budget != null) {
+                        updateState {
+                            it.copy(
+                                formMode = BudgetFormMode.Edit,
+                                editingBudgetId = budget.id,
+                                selectedCategory = budget.category,
+                                limitText = budget.monthlyLimit.toString(),
+                            )
+                        }
+                    } else {
+                        updateState {
+                            it.copy(contentState = BudgetContentState.Error(com.expense.tracker.shared.core.domain.AppError.Unknown))
+                        }
+                    }
+                }
+                is Result.Failure -> updateState {
+                    it.copy(contentState = BudgetContentState.Error(result.error))
+                }
             }
         }
     }
@@ -110,16 +116,6 @@ class BudgetViewModel(
                     monthlyLimit = limit,
                 )) {
                     is Result.Success -> {
-                        updateState {
-                            it.copy(
-                                showFormSheet = false,
-                                formMode = BudgetFormMode.Create,
-                                editingBudgetId = null,
-                                limitText = "",
-                                selectedCategory = TransactionCategory.OTHER,
-                            )
-                        }
-                        load()
                         sendEvent(BudgetEvent.BudgetSaved)
                     }
                     is Result.Failure -> {
@@ -134,16 +130,6 @@ class BudgetViewModel(
                     monthlyLimit = limit,
                 )) {
                     is Result.Success -> {
-                        updateState {
-                            it.copy(
-                                showFormSheet = false,
-                                formMode = BudgetFormMode.Create,
-                                editingBudgetId = null,
-                                limitText = "",
-                                selectedCategory = TransactionCategory.OTHER,
-                            )
-                        }
-                        load()
                         sendEvent(BudgetEvent.BudgetSaved)
                     }
                     is Result.Failure -> {

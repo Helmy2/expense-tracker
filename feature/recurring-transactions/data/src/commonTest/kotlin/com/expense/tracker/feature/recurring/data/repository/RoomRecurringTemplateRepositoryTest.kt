@@ -1,6 +1,5 @@
 package com.expense.tracker.feature.recurring.data.repository
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.feature.recurring.domain.model.RecurringTemplate
@@ -49,7 +48,7 @@ class RoomRecurringTemplateRepositoryTest {
             repository.createTemplate(
                 amount = 1500.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.RENT,
+                category = "RENT",
                 note = "Monthly rent",
                 frequency = RecurringFrequency.MONTHLY,
                 startDateMillis = startOfDay,
@@ -59,7 +58,7 @@ class RoomRecurringTemplateRepositoryTest {
 
         assertEquals(1500.0, created.amount)
         assertEquals(TransactionType.EXPENSE, created.type)
-        assertEquals(TransactionCategory.RENT, created.category)
+        assertEquals("RENT", created.category)
         assertEquals(RecurringFrequency.MONTHLY, created.frequency)
         assertEquals(false, created.isPaused)
         assertNull(created.lastGeneratedDateMillis)
@@ -114,7 +113,7 @@ class RoomRecurringTemplateRepositoryTest {
                 id = "tmpl-1",
                 amount = 200.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.UTILITIES,
+                category = "UTILITIES",
                 note = "Updated",
                 frequency = RecurringFrequency.MONTHLY,
                 startDateMillis = startOfDay + 86400000,
@@ -123,7 +122,7 @@ class RoomRecurringTemplateRepositoryTest {
         ).value
 
         assertEquals(200.0, updated.amount)
-        assertEquals(TransactionCategory.UTILITIES, updated.category)
+        assertEquals("UTILITIES", updated.category)
         assertEquals(RecurringFrequency.MONTHLY, updated.frequency)
         assertEquals(500L, updated.updatedAtMillis)
     }

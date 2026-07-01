@@ -7,7 +7,7 @@ import com.expense.tracker.feature.budget.domain.model.BudgetDetail
 import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
 import com.expense.tracker.feature.budget.domain.model.withSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.shared.core.data.dao.BudgetDao
 import com.expense.tracker.shared.core.data.dao.TransactionDao
@@ -36,7 +36,7 @@ class RoomBudgetRepository(
         onFailure = { AppError.Unknown },
     )
 
-    override suspend fun loadBudgetByCategory(category: TransactionCategory): Result<Budget?> = runSuspendCatching(
+    override suspend fun loadBudgetByCategory(category: ExpenseCategory): Result<Budget?> = runSuspendCatching(
         block = {
             budgetDao.getByCategory(category.name)?.toDomain()
         },
@@ -44,7 +44,7 @@ class RoomBudgetRepository(
     )
 
     override suspend fun createBudget(
-        category: TransactionCategory,
+        category: ExpenseCategory,
         monthlyLimit: Double,
     ): Result<Budget> = runSuspendCatching(
         block = {

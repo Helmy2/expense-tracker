@@ -4,10 +4,14 @@ import Foundation
 final class ExpenseFormState {
     var amountText: String = ""
     var selectedType: ExpenseType = .expense
-    var selectedCategory: ExpenseCategory = .food
+    var selectedCategory: String = ExpenseCategory.food.rawValue
     var noteText: String = ""
     var isSaving: Bool = false
     var amountError: Bool = false
+
+    var categoryDisplayName: String {
+        resolveCategoryDisplayName(selectedCategory, type: selectedType)
+    }
 
     var isValid: Bool {
         guard let amount = Double(amountText), amount > 0 else { return false }
@@ -17,7 +21,7 @@ final class ExpenseFormState {
     func reset() {
         amountText = ""
         selectedType = .expense
-        selectedCategory = .food
+        selectedCategory = ExpenseCategory.food.rawValue
         noteText = ""
         isSaving = false
         amountError = false
@@ -30,5 +34,10 @@ final class ExpenseFormState {
         }
         amountError = false
         return true
+    }
+
+    /// Call when selectedType changes to reset category to the first entry of the new type.
+    func resetCategoryForType() {
+        selectedCategory = firstCategoryRawValue(for: selectedType)
     }
 }

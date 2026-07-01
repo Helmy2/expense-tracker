@@ -1,6 +1,7 @@
 package com.expense.tracker.feature.recurring.impl
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
+import com.expense.tracker.feature.expense.domain.model.IncomeCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.feature.recurring.domain.model.RecurringTemplate
@@ -51,7 +52,7 @@ class RecurringPresentationMapperTest {
             id = "rt-1",
             amount = 1500.0,
             type = TransactionType.INCOME,
-            category = TransactionCategory.SALARY,
+            category = IncomeCategory.SALARY.name,
             note = "Monthly salary",
             frequency = RecurringFrequency.MONTHLY,
             startDateMillis = 1700000000000L,
@@ -66,7 +67,7 @@ class RecurringPresentationMapperTest {
 
         assertEquals("rt-1", ui.id)
         assertTrue(ui.formattedAmount.contains("+"))
-        assertEquals(TransactionCategory.SALARY, ui.category)
+        assertEquals(IncomeCategory.SALARY.name, ui.category)
         assertEquals("Monthly", ui.frequencyLabel)
         assertFalse(ui.isPaused)
         assertTrue(ui.isIncome)
@@ -78,7 +79,7 @@ class RecurringPresentationMapperTest {
             id = "rt-2",
             amount = 45.0,
             type = TransactionType.EXPENSE,
-            category = TransactionCategory.ENTERTAINMENT,
+            category = ExpenseCategory.ENTERTAINMENT.name,
             note = "Netflix",
             frequency = RecurringFrequency.MONTHLY,
             startDateMillis = 1700000000000L,
@@ -101,7 +102,7 @@ class RecurringPresentationMapperTest {
             templateId = "rt-1",
             amount = 1500.0,
             type = TransactionType.INCOME,
-            category = TransactionCategory.SALARY,
+            category = IncomeCategory.SALARY.name,
             note = "Monthly salary",
             frequency = RecurringFrequency.MONTHLY,
             nextDueDateMillis = 1700000000000L,
@@ -111,7 +112,7 @@ class RecurringPresentationMapperTest {
 
         assertEquals("rt-1", ui.templateId)
         assertTrue(ui.formattedAmount.contains("+"))
-        assertEquals(TransactionCategory.SALARY, ui.category)
+        assertEquals(IncomeCategory.SALARY.name, ui.category)
         assertTrue(ui.isIncome)
     }
 

@@ -1,18 +1,11 @@
 package com.expense.tracker.feature.budget.impl
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 
 sealed interface BudgetAction {
     data object Load : BudgetAction
-    data object ToggleFormSheet : BudgetAction
-    data object DismissFormSheet : BudgetAction
-    data class StartCreate(val availableCategories: List<TransactionCategory>) : BudgetAction
-    data class StartEdit(
-        val budgetId: String,
-        val currentLimit: Double,
-        val category: TransactionCategory,
-    ) : BudgetAction
-    data class CategorySelected(val category: TransactionCategory) : BudgetAction
+    data class SetBudget(val budgetId: String?) : BudgetAction
+    data class CategorySelected(val category: ExpenseCategory) : BudgetAction
     data object ToggleCategoryMenu : BudgetAction
     data object DismissCategoryMenu : BudgetAction
     data class LimitChanged(val value: String) : BudgetAction

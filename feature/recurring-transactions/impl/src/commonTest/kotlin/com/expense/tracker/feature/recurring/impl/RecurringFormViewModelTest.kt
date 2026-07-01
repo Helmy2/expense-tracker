@@ -1,7 +1,8 @@
 package com.expense.tracker.feature.recurring.impl
 
 import app.cash.turbine.test
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
+import com.expense.tracker.feature.expense.domain.model.IncomeCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.feature.recurring.domain.model.RecurringTemplate
@@ -49,7 +50,7 @@ class RecurringFormViewModelTest {
         assertNull(viewModel.state.value.templateId)
         assertEquals("", viewModel.state.value.amountText)
         assertEquals(TransactionType.EXPENSE, viewModel.state.value.selectedType)
-        assertEquals(TransactionCategory.OTHER, viewModel.state.value.selectedCategory)
+        assertEquals(ExpenseCategory.OTHER_EXPENSE.name, viewModel.state.value.selectedCategory)
         assertEquals(RecurringFrequency.MONTHLY, viewModel.state.value.selectedFrequency)
         assertNotNull(viewModel.state.value.startDateMillis)
     }
@@ -90,10 +91,10 @@ class RecurringFormViewModelTest {
             timeProvider = timeProvider,
         )
 
-        viewModel.onAction(RecurringFormAction.CategorySelected(TransactionCategory.FOOD))
+        viewModel.onAction(RecurringFormAction.CategorySelected(ExpenseCategory.FOOD.name))
         advanceUntilIdle()
 
-        assertEquals(TransactionCategory.FOOD, viewModel.state.value.selectedCategory)
+        assertEquals(ExpenseCategory.FOOD.name, viewModel.state.value.selectedCategory)
     }
 
     @Test
@@ -194,7 +195,7 @@ class RecurringFormViewModelTest {
 
         viewModel.onAction(RecurringFormAction.AmountChanged("1500"))
         viewModel.onAction(RecurringFormAction.TypeSelected(TransactionType.INCOME))
-        viewModel.onAction(RecurringFormAction.CategorySelected(TransactionCategory.SALARY))
+        viewModel.onAction(RecurringFormAction.CategorySelected(IncomeCategory.SALARY.name))
         viewModel.onAction(RecurringFormAction.NoteChanged("Monthly salary"))
         viewModel.onAction(RecurringFormAction.FrequencySelected(RecurringFrequency.MONTHLY))
         advanceUntilIdle()
@@ -214,7 +215,7 @@ class RecurringFormViewModelTest {
             id = "rt-1",
             amount = 1500.0,
             type = TransactionType.INCOME,
-            category = TransactionCategory.SALARY,
+            category = IncomeCategory.SALARY.name,
             note = "Monthly salary",
             frequency = RecurringFrequency.MONTHLY,
             startDateMillis = 1700000000000L,
@@ -237,7 +238,7 @@ class RecurringFormViewModelTest {
         assertEquals("rt-1", viewModel.state.value.templateId)
         assertEquals("1500.0", viewModel.state.value.amountText)
         assertEquals(TransactionType.INCOME, viewModel.state.value.selectedType)
-        assertEquals(TransactionCategory.SALARY, viewModel.state.value.selectedCategory)
+        assertEquals(IncomeCategory.SALARY.name, viewModel.state.value.selectedCategory)
         assertEquals("Monthly salary", viewModel.state.value.noteText)
         assertEquals(RecurringFrequency.MONTHLY, viewModel.state.value.selectedFrequency)
         assertEquals(1700000000000L, viewModel.state.value.startDateMillis)
@@ -281,7 +282,7 @@ private class FakeFormRecurringRepository(
     override suspend fun createTemplate(
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequency,
         startDateMillis: Long,
@@ -310,7 +311,7 @@ private class FakeFormRecurringRepository(
         id: String,
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequency,
         startDateMillis: Long,

@@ -1,6 +1,5 @@
 package com.expense.tracker.feature.recurring.data.mapper
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.feature.recurring.domain.model.RecurringTemplate
@@ -10,7 +9,7 @@ fun RecurringTemplateEntity.toDomain(): RecurringTemplate = RecurringTemplate(
     id = id,
     amount = amount,
     type = TransactionType.valueOf(type),
-    category = TransactionCategory.valueOf(category),
+    category = category,
     note = note,
     frequency = RecurringFrequency.valueOf(frequency),
     startDateMillis = startDateMillis,
@@ -25,7 +24,7 @@ fun RecurringTemplate.toEntity(): RecurringTemplateEntity = RecurringTemplateEnt
     id = id,
     amount = amount,
     type = type.name,
-    category = category.name,
+    category = category,
     note = note,
     frequency = frequency.name,
     startDateMillis = startDateMillis,

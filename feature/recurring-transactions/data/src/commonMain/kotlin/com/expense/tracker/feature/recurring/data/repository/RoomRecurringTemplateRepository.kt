@@ -1,6 +1,5 @@
 package com.expense.tracker.feature.recurring.data.repository
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.data.mapper.toDomain
 import com.expense.tracker.feature.recurring.data.mapper.toEntity
@@ -40,7 +39,7 @@ class RoomRecurringTemplateRepository(
     override suspend fun createTemplate(
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequency,
         startDateMillis: Long,
@@ -72,7 +71,7 @@ class RoomRecurringTemplateRepository(
         id: String,
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
         frequency: RecurringFrequency,
         startDateMillis: Long,
@@ -84,7 +83,7 @@ class RoomRecurringTemplateRepository(
             val updated = existing.copy(
                 amount = amount,
                 type = type.name,
-                category = category.name,
+                category = category,
                 note = note.trim(),
                 frequency = frequency.name,
                 startDateMillis = startDateMillis,
@@ -173,7 +172,7 @@ class RoomRecurringTemplateRepository(
                     templateId = entity.id,
                     amount = entity.amount,
                     type = TransactionType.valueOf(entity.type),
-                    category = TransactionCategory.valueOf(entity.category),
+                    category = entity.category,
                     note = entity.note,
                     frequency = frequency,
                     nextDueDateMillis = nextDue,

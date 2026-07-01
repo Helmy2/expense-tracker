@@ -48,7 +48,7 @@ final class RecurringFormStateTests: XCTestCase {
         formState.templateId = "test-id"
         formState.amountText = "500"
         formState.selectedType = .income
-        formState.selectedCategory = .rent
+        formState.selectedCategory = ExpenseCategory.rent.rawValue
         formState.selectedFrequency = .weekly
         formState.noteText = "Test note"
         formState.isSaving = true
@@ -61,7 +61,7 @@ final class RecurringFormStateTests: XCTestCase {
         XCTAssertNil(formState.templateId)
         XCTAssertEqual(formState.amountText, "")
         XCTAssertEqual(formState.selectedType, .expense)
-        XCTAssertEqual(formState.selectedCategory, .other)
+        XCTAssertEqual(formState.selectedCategory, ExpenseCategory.food.rawValue)
         XCTAssertEqual(formState.selectedFrequency, .monthly)
         XCTAssertEqual(formState.noteText, "")
         XCTAssertFalse(formState.isSaving)
@@ -76,7 +76,7 @@ final class RecurringFormStateTests: XCTestCase {
             id: "test-template",
             amount: 250.50,
             type: .income,
-            category: .salary,
+            category: IncomeCategory.salary.rawValue,
             frequency: .weekly,
             startDateMillis: 1_720_000_000_000,
             endDateMillis: 1_760_000_000_000
@@ -86,7 +86,7 @@ final class RecurringFormStateTests: XCTestCase {
 
         XCTAssertEqual(formState.templateId, "test-template")
         XCTAssertEqual(formState.selectedType, .income)
-        XCTAssertEqual(formState.selectedCategory, .salary)
+        XCTAssertEqual(formState.selectedCategory, IncomeCategory.salary.rawValue)
         XCTAssertEqual(formState.selectedFrequency, .weekly)
         XCTAssertTrue(formState.hasEndDate)
         XCTAssertNotNil(formState.endDate)
@@ -144,5 +144,27 @@ final class RecurringFormStateTests: XCTestCase {
         formState.endDate = date
 
         XCTAssertEqual(formState.endDateMillis, 1_760_000_000_000)
+    }
+
+    func testResetCategoryForTypeResetsToFirstIncomeCategory() {
+        let formState = RecurringFormState()
+        formState.selectedType = .expense
+        formState.selectedCategory = ExpenseCategory.food.rawValue
+
+        formState.selectedType = .income
+        formState.resetCategoryForType()
+
+        XCTAssertEqual(formState.selectedCategory, IncomeCategory.salary.rawValue)
+    }
+
+    func testResetCategoryForTypeResetsToFirstExpenseCategory() {
+        let formState = RecurringFormState()
+        formState.selectedType = .income
+        formState.selectedCategory = IncomeCategory.salary.rawValue
+
+        formState.selectedType = .expense
+        formState.resetCategoryForType()
+
+        XCTAssertEqual(formState.selectedCategory, ExpenseCategory.food.rawValue)
     }
 }

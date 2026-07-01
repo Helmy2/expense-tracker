@@ -5,8 +5,8 @@ final class ExpenseListViewModelTests: XCTestCase {
     func testLoadSetsContentStateWhenBridgeReturnsItems() async {
         let bridge = MockTransactionRepositoryBridge()
         bridge.transactionsToReturn = [
-            makeExpenseItem(id: "1", amount: 45, type: .expense, category: .food),
-            makeExpenseItem(id: "2", amount: 120, type: .income, category: .salary)
+            makeExpenseItem(id: "1", amount: 45, type: .expense, category: ExpenseCategory.food.rawValue),
+            makeExpenseItem(id: "2", amount: 120, type: .income, category: IncomeCategory.salary.rawValue)
         ]
         let viewModel = ExpenseListViewModel(bridge: bridge, nowMillis: { 500 })
 
@@ -59,14 +59,14 @@ final class ExpenseListViewModelTests: XCTestCase {
 
     func testSaveTransactionClosesFormSheet() async {
         let bridge = MockTransactionRepositoryBridge()
-        bridge.addedItem = makeExpenseItem(id: "new-1", amount: 25, type: .expense, category: .food)
-        bridge.transactionsToReturn = [makeExpenseItem(id: "new-1", amount: 25, type: .expense, category: .food)]
+        bridge.addedItem = makeExpenseItem(id: "new-1", amount: 25, type: .expense, category: ExpenseCategory.food.rawValue)
+        bridge.transactionsToReturn = [makeExpenseItem(id: "new-1", amount: 25, type: .expense, category: ExpenseCategory.food.rawValue)]
         let viewModel = ExpenseListViewModel(bridge: bridge, nowMillis: { 500 })
 
         viewModel.showFormSheet = true
         viewModel.formState.amountText = "25.00"
         viewModel.formState.selectedType = .expense
-        viewModel.formState.selectedCategory = .food
+        viewModel.formState.selectedCategory = ExpenseCategory.food.rawValue
         viewModel.formState.noteText = "Lunch"
 
         await viewModel.saveTransaction()
@@ -76,13 +76,13 @@ final class ExpenseListViewModelTests: XCTestCase {
 
     func testSaveTransactionAddsAndReloads() async {
         let bridge = MockTransactionRepositoryBridge()
-        bridge.addedItem = makeExpenseItem(id: "new-1", amount: 25, type: .expense, category: .food)
-        bridge.transactionsToReturn = [makeExpenseItem(id: "new-1", amount: 25, type: .expense, category: .food)]
+        bridge.addedItem = makeExpenseItem(id: "new-1", amount: 25, type: .expense, category: ExpenseCategory.food.rawValue)
+        bridge.transactionsToReturn = [makeExpenseItem(id: "new-1", amount: 25, type: .expense, category: ExpenseCategory.food.rawValue)]
         let viewModel = ExpenseListViewModel(bridge: bridge, nowMillis: { 500 })
 
         viewModel.formState.amountText = "25.00"
         viewModel.formState.selectedType = .expense
-        viewModel.formState.selectedCategory = .food
+        viewModel.formState.selectedCategory = ExpenseCategory.food.rawValue
         viewModel.formState.noteText = "Lunch"
 
         await viewModel.saveTransaction()
@@ -98,7 +98,7 @@ final class ExpenseListViewModelTests: XCTestCase {
 
         viewModel.formState.amountText = "25.00"
         viewModel.formState.selectedType = .expense
-        viewModel.formState.selectedCategory = .food
+        viewModel.formState.selectedCategory = ExpenseCategory.food.rawValue
 
         await viewModel.saveTransaction()
 
@@ -128,9 +128,9 @@ final class ExpenseListViewModelTests: XCTestCase {
     func testDashboardComputesCorrectTotals() async {
         let bridge = MockTransactionRepositoryBridge()
         bridge.transactionsToReturn = [
-            makeExpenseItem(id: "1", amount: 100, type: .income, category: .salary),
-            makeExpenseItem(id: "2", amount: 45, type: .expense, category: .food),
-            makeExpenseItem(id: "3", amount: 30, type: .expense, category: .transportation)
+            makeExpenseItem(id: "1", amount: 100, type: .income, category: IncomeCategory.salary.rawValue),
+            makeExpenseItem(id: "2", amount: 45, type: .expense, category: ExpenseCategory.food.rawValue),
+            makeExpenseItem(id: "3", amount: 30, type: .expense, category: ExpenseCategory.transportation.rawValue)
         ]
         let viewModel = ExpenseListViewModel(bridge: bridge, nowMillis: { 500 })
 

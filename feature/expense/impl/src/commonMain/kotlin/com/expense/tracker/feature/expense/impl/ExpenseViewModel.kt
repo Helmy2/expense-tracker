@@ -1,6 +1,7 @@
 package com.expense.tracker.feature.expense.impl
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
+import com.expense.tracker.feature.expense.domain.model.IncomeCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.expense.domain.model.computeDashboard
 import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
@@ -27,7 +28,13 @@ class ExpenseViewModel(
         when (action) {
             is ExpenseAction.Load -> load()
             is ExpenseAction.AmountChanged -> updateState { it.copy(amountText = action.value) }
-            is ExpenseAction.TypeSelected -> updateState { it.copy(selectedType = action.type) }
+            is ExpenseAction.TypeSelected -> updateState {
+                val firstCategory = when (action.type) {
+                    TransactionType.INCOME -> IncomeCategory.entries.first().name
+                    TransactionType.EXPENSE -> ExpenseCategory.entries.first().name
+                }
+                it.copy(selectedType = action.type, selectedCategory = firstCategory)
+            }
             is ExpenseAction.CategorySelected -> updateState {
                 it.copy(selectedCategory = action.category, categoryMenuExpanded = false)
             }
@@ -108,7 +115,7 @@ class ExpenseViewModel(
                         amountText = "",
                         noteText = "",
                         selectedType = TransactionType.EXPENSE,
-                        selectedCategory = TransactionCategory.OTHER,
+                        selectedCategory = ExpenseCategory.OTHER_EXPENSE.name,
                         showBottomSheet = false,
                     )
                 }

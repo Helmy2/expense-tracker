@@ -32,7 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.expense.tracker.feature.budget.domain.model.BudgetStatus
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.budget_empty_body
@@ -48,7 +48,7 @@ import com.expense.tracker.shared.designsystem.components.CircularProgressIndica
 import com.expense.tracker.shared.designsystem.components.ComponentSize
 import com.expense.tracker.shared.designsystem.components.FloatingActionButton
 import com.expense.tracker.shared.designsystem.components.IconButton
-import com.expense.tracker.shared.designsystem.components.Sheet
+
 import org.jetbrains.compose.resources.stringResource
 
 private val BudgetGreen = Color(0xFF4CAF50)
@@ -120,23 +120,12 @@ fun BudgetContent(
         }
 
         FloatingActionButton(
-            onClick = { onAction(BudgetAction.ToggleFormSheet) },
+            onClick = { onNavigateToCreate() },
             modifier = Modifier.align(Alignment.BottomEnd).padding(DreamTheme.spacing.md),
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = "Add budget",
-            )
-        }
-    }
-
-    if (state.showFormSheet) {
-        Sheet(
-            onDismissRequest = { onAction(BudgetAction.DismissFormSheet) },
-        ) {
-            BudgetFormContent(
-                state = state,
-                onAction = onAction,
             )
         }
     }

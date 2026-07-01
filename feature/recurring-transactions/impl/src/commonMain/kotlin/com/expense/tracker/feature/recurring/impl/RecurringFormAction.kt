@@ -1,6 +1,5 @@
 package com.expense.tracker.feature.recurring.impl
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 
@@ -8,7 +7,7 @@ sealed interface RecurringFormAction {
     data class SetTemplate(val templateId: String?) : RecurringFormAction
     data class AmountChanged(val value: String) : RecurringFormAction
     data class TypeSelected(val type: TransactionType) : RecurringFormAction
-    data class CategorySelected(val category: TransactionCategory) : RecurringFormAction
+    data class CategorySelected(val category: String) : RecurringFormAction
     data object ToggleCategoryMenu : RecurringFormAction
     data object DismissCategoryMenu : RecurringFormAction
     data class NoteChanged(val value: String) : RecurringFormAction

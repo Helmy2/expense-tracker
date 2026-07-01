@@ -4,7 +4,7 @@ import com.expense.tracker.feature.budget.domain.model.Budget
 import com.expense.tracker.feature.budget.domain.model.BudgetDetail
 import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.domain.AppError as CoreAppError
 import com.expense.tracker.shared.core.domain.Result
 import kotlinx.coroutines.CancellationException
@@ -111,7 +111,7 @@ class BudgetRepositoryExtensionsTest {
                 BudgetWithSpending(
                     budget = Budget(
                         id = "b1",
-                        category = TransactionCategory.FOOD,
+                        category = ExpenseCategory.FOOD,
                         monthlyLimit = 500.0,
                         createdAtMillis = 1L,
                         updatedAtMillis = 1L,
@@ -162,10 +162,10 @@ private class ThrowingBudgetRepository(
     override suspend fun loadBudgetById(id: String): Result<Budget?> =
         Result.Failure(CoreAppError.Unknown)
 
-    override suspend fun loadBudgetByCategory(category: TransactionCategory): Result<Budget?> =
+    override suspend fun loadBudgetByCategory(category: ExpenseCategory): Result<Budget?> =
         Result.Failure(CoreAppError.Unknown)
 
-    override suspend fun createBudget(category: TransactionCategory, monthlyLimit: Double): Result<Budget> =
+    override suspend fun createBudget(category: ExpenseCategory, monthlyLimit: Double): Result<Budget> =
         Result.Failure(CoreAppError.Unknown)
 
     override suspend fun updateBudget(id: String, monthlyLimit: Double): Result<Budget> =
@@ -189,10 +189,10 @@ private class ResultFailureBudgetRepository(
 
     override suspend fun loadBudgetById(id: String): Result<Budget?> = Result.Failure(error)
 
-    override suspend fun loadBudgetByCategory(category: TransactionCategory): Result<Budget?> =
+    override suspend fun loadBudgetByCategory(category: ExpenseCategory): Result<Budget?> =
         Result.Failure(error)
 
-    override suspend fun createBudget(category: TransactionCategory, monthlyLimit: Double): Result<Budget> =
+    override suspend fun createBudget(category: ExpenseCategory, monthlyLimit: Double): Result<Budget> =
         Result.Failure(error)
 
     override suspend fun updateBudget(id: String, monthlyLimit: Double): Result<Budget> =
@@ -214,10 +214,10 @@ private class StubBudgetRepository(
 
     override suspend fun loadBudgetById(id: String): Result<Budget?> = Result.Success(null)
 
-    override suspend fun loadBudgetByCategory(category: TransactionCategory): Result<Budget?> =
+    override suspend fun loadBudgetByCategory(category: ExpenseCategory): Result<Budget?> =
         Result.Success(null)
 
-    override suspend fun createBudget(category: TransactionCategory, monthlyLimit: Double): Result<Budget> =
+    override suspend fun createBudget(category: ExpenseCategory, monthlyLimit: Double): Result<Budget> =
         Result.Failure(CoreAppError.Unknown)
 
     override suspend fun updateBudget(id: String, monthlyLimit: Double): Result<Budget> =

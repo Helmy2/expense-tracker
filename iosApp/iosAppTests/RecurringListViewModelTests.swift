@@ -5,8 +5,8 @@ final class RecurringListViewModelTests: XCTestCase {
     func testLoadSetsContentStateWhenTemplatesExist() async {
         let bridge = MockRecurringRepositoryBridge()
         bridge.templatesToReturn = [
-            makeRecurringTemplateItem(id: "1", amount: 1500, type: .expense, category: .rent, frequency: .monthly),
-            makeRecurringTemplateItem(id: "2", amount: 45, type: .expense, category: .entertainment, frequency: .monthly),
+            makeRecurringTemplateItem(id: "1", amount: 1500, type: .expense, category: ExpenseCategory.rent.rawValue, frequency: .monthly),
+            makeRecurringTemplateItem(id: "2", amount: 45, type: .expense, category: ExpenseCategory.entertainment.rawValue, frequency: .monthly),
         ]
         let viewModel = RecurringListViewModel(bridge: bridge)
 

@@ -39,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.asMessageText
@@ -47,16 +46,24 @@ import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.expense_amount_label
 import com.expense.tracker.shared.core.strings.expense_amount_validation
 import com.expense.tracker.shared.core.strings.expense_balance_label
+import com.expense.tracker.shared.core.strings.expense_category_bills
 import com.expense.tracker.shared.core.strings.expense_category_education
 import com.expense.tracker.shared.core.strings.expense_category_entertainment
 import com.expense.tracker.shared.core.strings.expense_category_food
 import com.expense.tracker.shared.core.strings.expense_category_healthcare
-import com.expense.tracker.shared.core.strings.expense_category_other
+import com.expense.tracker.shared.core.strings.expense_category_other_expense
 import com.expense.tracker.shared.core.strings.expense_category_rent
-import com.expense.tracker.shared.core.strings.expense_category_salary
 import com.expense.tracker.shared.core.strings.expense_category_shopping
 import com.expense.tracker.shared.core.strings.expense_category_transportation
 import com.expense.tracker.shared.core.strings.expense_category_utilities
+import com.expense.tracker.shared.core.strings.income_category_business
+import com.expense.tracker.shared.core.strings.income_category_freelance
+import com.expense.tracker.shared.core.strings.income_category_gift
+import com.expense.tracker.shared.core.strings.income_category_investment
+import com.expense.tracker.shared.core.strings.income_category_other_income
+import com.expense.tracker.shared.core.strings.income_category_refund
+import com.expense.tracker.shared.core.strings.income_category_rental
+import com.expense.tracker.shared.core.strings.income_category_salary
 import com.expense.tracker.shared.core.strings.expense_delete_body
 import com.expense.tracker.shared.core.strings.expense_delete_confirm
 import com.expense.tracker.shared.core.strings.expense_delete_dismiss
@@ -242,7 +249,7 @@ private fun DashboardUpcomingSection(
                         color = if (item.isIncome) IncomeGreen else ExpenseRed,
                     )
                     Text(
-                        text = "${item.category.asLabel()} \u00B7 ${item.frequencyLabel}",
+                        text = "${item.category.asCategoryLabel()} \u00B7 ${item.frequencyLabel}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -382,6 +389,7 @@ private fun FormSheetContent(
 
         CategoryDropdown(
             selectedCategory = state.selectedCategory,
+            availableCategories = state.availableCategories(),
             expanded = state.categoryMenuExpanded,
             onToggle = { onAction(ExpenseAction.ToggleCategoryMenu) },
             onDismiss = { onAction(ExpenseAction.DismissCategoryMenu) },
@@ -439,15 +447,16 @@ private fun NoteField(
 
 @Composable
 private fun CategoryDropdown(
-    selectedCategory: TransactionCategory,
+    selectedCategory: String,
+    availableCategories: List<String>,
     expanded: Boolean,
     onToggle: () -> Unit,
     onDismiss: () -> Unit,
-    onSelect: (TransactionCategory) -> Unit,
+    onSelect: (String) -> Unit,
 ) {
     BoxWithConstraints {
         TextField(
-            value = selectedCategory.asLabel(),
+            value = selectedCategory.asCategoryLabel(),
             onValueChange = {},
             readOnly = true,
             trailingIcon = {
@@ -475,7 +484,7 @@ private fun CategoryDropdown(
             onDismissRequest = onDismiss,
             modifier = Modifier.width(maxWidth),
         ) {
-            TransactionCategory.entries.forEach { category ->
+            availableCategories.forEach { category ->
                 Box(
                     modifier = Modifier.fillMaxWidth().clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -484,7 +493,7 @@ private fun CategoryDropdown(
                     ).padding(vertical = DreamTheme.spacing.sm),
                 ) {
                     Text(
-                        text = category.asLabel(),
+                        text = category.asCategoryLabel(),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -495,17 +504,29 @@ private fun CategoryDropdown(
 }
 
 @Composable
-private fun TransactionCategory.asLabel(): String = when (this) {
-    TransactionCategory.FOOD -> stringResource(Res.string.expense_category_food)
-    TransactionCategory.RENT -> stringResource(Res.string.expense_category_rent)
-    TransactionCategory.SALARY -> stringResource(Res.string.expense_category_salary)
-    TransactionCategory.ENTERTAINMENT -> stringResource(Res.string.expense_category_entertainment)
-    TransactionCategory.TRANSPORTATION -> stringResource(Res.string.expense_category_transportation)
-    TransactionCategory.UTILITIES -> stringResource(Res.string.expense_category_utilities)
-    TransactionCategory.SHOPPING -> stringResource(Res.string.expense_category_shopping)
-    TransactionCategory.HEALTHCARE -> stringResource(Res.string.expense_category_healthcare)
-    TransactionCategory.EDUCATION -> stringResource(Res.string.expense_category_education)
-    TransactionCategory.OTHER -> stringResource(Res.string.expense_category_other)
+private fun String.asCategoryLabel(): String {
+    val categoryName = this
+    return when (categoryName) {
+        "SALARY" -> stringResource(Res.string.income_category_salary)
+        "FREELANCE" -> stringResource(Res.string.income_category_freelance)
+        "INVESTMENT" -> stringResource(Res.string.income_category_investment)
+        "BUSINESS" -> stringResource(Res.string.income_category_business)
+        "RENTAL" -> stringResource(Res.string.income_category_rental)
+        "GIFT" -> stringResource(Res.string.income_category_gift)
+        "REFUND" -> stringResource(Res.string.income_category_refund)
+        "OTHER_INCOME" -> stringResource(Res.string.income_category_other_income)
+        "FOOD" -> stringResource(Res.string.expense_category_food)
+        "RENT" -> stringResource(Res.string.expense_category_rent)
+        "ENTERTAINMENT" -> stringResource(Res.string.expense_category_entertainment)
+        "TRANSPORTATION" -> stringResource(Res.string.expense_category_transportation)
+        "UTILITIES" -> stringResource(Res.string.expense_category_utilities)
+        "SHOPPING" -> stringResource(Res.string.expense_category_shopping)
+        "HEALTHCARE" -> stringResource(Res.string.expense_category_healthcare)
+        "EDUCATION" -> stringResource(Res.string.expense_category_education)
+        "BILLS" -> stringResource(Res.string.expense_category_bills)
+        "OTHER_EXPENSE" -> stringResource(Res.string.expense_category_other_expense)
+        else -> categoryName
+    }
 }
 
 @Composable
@@ -545,7 +566,7 @@ private fun TransactionItem(
 
     ListItem(
         headline = transaction.formattedAmount,
-        supportingText = "${transaction.category.asLabel()} \u00B7 ${transaction.formattedDate}",
+        supportingText = "${transaction.category.asCategoryLabel()} \u00B7 ${transaction.formattedDate}",
         leadingContent = {
             Box(
                 modifier = Modifier.size(40.dp).clip(CircleShape).background(

@@ -1,6 +1,5 @@
 package com.expense.tracker.shared.di
 
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.feature.recurring.domain.model.RecurringTemplate
@@ -25,7 +24,7 @@ suspend fun RecurringTemplateRepository.loadTemplateByIdOrThrow(id: String): Rec
 suspend fun RecurringTemplateRepository.createTemplateOrThrow(
     amount: Double,
     type: TransactionType,
-    category: TransactionCategory,
+    category: String,
     note: String,
     frequency: RecurringFrequency,
     startDateMillis: Long,
@@ -41,7 +40,7 @@ suspend fun RecurringTemplateRepository.updateTemplateOrThrow(
     id: String,
     amount: Double,
     type: TransactionType,
-    category: TransactionCategory,
+    category: String,
     note: String,
     frequency: RecurringFrequency,
     startDateMillis: Long,

@@ -43,7 +43,7 @@ final class BudgetFormStateTests: XCTestCase {
         formState.reset()
 
         XCTAssertEqual(formState.limitText, "")
-        XCTAssertEqual(formState.selectedCategory, .other)
+        XCTAssertEqual(formState.selectedCategory, .otherExpense)
         XCTAssertFalse(formState.isSaving)
         XCTAssertFalse(formState.limitError)
         XCTAssertFalse(formState.categoryMenuExpanded)

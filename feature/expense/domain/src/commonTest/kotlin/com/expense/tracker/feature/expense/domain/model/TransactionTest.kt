@@ -2,7 +2,6 @@ package com.expense.tracker.feature.expense.domain.model
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class TransactionTest {
     @Test
@@ -11,7 +10,7 @@ class TransactionTest {
             id = "txn-1",
             amount = 42.50,
             type = TransactionType.EXPENSE,
-            category = TransactionCategory.FOOD,
+            category = "FOOD",
             note = "Lunch",
             createdAtMillis = 1_720_000_000_000,
         )
@@ -19,7 +18,7 @@ class TransactionTest {
         assertEquals("txn-1", transaction.id)
         assertEquals(42.50, transaction.amount)
         assertEquals(TransactionType.EXPENSE, transaction.type)
-        assertEquals(TransactionCategory.FOOD, transaction.category)
+        assertEquals("FOOD", transaction.category)
         assertEquals("Lunch", transaction.note)
         assertEquals(1_720_000_000_000, transaction.createdAtMillis)
     }
@@ -30,7 +29,7 @@ class TransactionTest {
             id = "txn-2",
             amount = 100.0,
             type = TransactionType.INCOME,
-            category = TransactionCategory.SALARY,
+            category = "SALARY",
             note = "",
             createdAtMillis = 1_720_000_000_000,
         )
@@ -44,7 +43,7 @@ class TransactionTest {
             id = "txn-3",
             amount = 500.0,
             type = TransactionType.INCOME,
-            category = TransactionCategory.SALARY,
+            category = "SALARY",
             note = "Monthly salary",
             createdAtMillis = 1_720_000_000_000,
         )
@@ -58,11 +57,34 @@ class TransactionTest {
             id = "txn-4",
             amount = 25.0,
             type = TransactionType.EXPENSE,
-            category = TransactionCategory.TRANSPORTATION,
+            category = "TRANSPORTATION",
             note = "Bus fare",
             createdAtMillis = 1_720_000_000_000,
         )
 
         assertEquals(TransactionType.EXPENSE, transaction.type)
+    }
+
+    @Test
+    fun categoryIsStoredAsString() {
+        val expense = Transaction(
+            id = "txn-5",
+            amount = 10.0,
+            type = TransactionType.EXPENSE,
+            category = "FOOD",
+            note = "",
+            createdAtMillis = 1_720_000_000_000,
+        )
+        val income = Transaction(
+            id = "txn-6",
+            amount = 1000.0,
+            type = TransactionType.INCOME,
+            category = "SALARY",
+            note = "",
+            createdAtMillis = 1_720_000_000_000,
+        )
+
+        assertEquals("FOOD", expense.category)
+        assertEquals("SALARY", income.category)
     }
 }

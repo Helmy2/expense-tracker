@@ -1,8 +1,9 @@
 package com.expense.tracker.feature.expense.impl
 
 import app.cash.turbine.test
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
+import com.expense.tracker.feature.expense.domain.model.IncomeCategory
 import com.expense.tracker.feature.expense.domain.model.Transaction
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
@@ -36,13 +37,13 @@ private fun fakeRecurringRepository(): RecurringTemplateRepository =
         override suspend fun loadTemplates(): Result<List<RecurringTemplate>> = Result.Success(emptyList())
         override suspend fun loadTemplateById(id: String): Result<RecurringTemplate?> = Result.Success(null)
         override suspend fun createTemplate(
-            amount: Double, type: com.expense.tracker.feature.expense.domain.model.TransactionType,
-            category: com.expense.tracker.feature.expense.domain.model.TransactionCategory, note: String,
+            amount: Double, type: TransactionType,
+            category: String, note: String,
             frequency: RecurringFrequency, startDateMillis: Long, endDateMillis: Long?,
-        ): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, com.expense.tracker.feature.expense.domain.model.TransactionType.EXPENSE, com.expense.tracker.feature.expense.domain.model.TransactionCategory.OTHER, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
-        override suspend fun updateTemplate(id: String, amount: Double, type: com.expense.tracker.feature.expense.domain.model.TransactionType, category: com.expense.tracker.feature.expense.domain.model.TransactionCategory, note: String, frequency: RecurringFrequency, startDateMillis: Long, endDateMillis: Long?): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, com.expense.tracker.feature.expense.domain.model.TransactionType.EXPENSE, com.expense.tracker.feature.expense.domain.model.TransactionCategory.OTHER, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
+        ): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, TransactionType.EXPENSE, ExpenseCategory.OTHER_EXPENSE.name, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
+        override suspend fun updateTemplate(id: String, amount: Double, type: TransactionType, category: String, note: String, frequency: RecurringFrequency, startDateMillis: Long, endDateMillis: Long?): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, TransactionType.EXPENSE, ExpenseCategory.OTHER_EXPENSE.name, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
         override suspend fun deleteTemplate(id: String): Result<Unit> = Result.Success(Unit)
-        override suspend fun togglePause(id: String): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, com.expense.tracker.feature.expense.domain.model.TransactionType.EXPENSE, com.expense.tracker.feature.expense.domain.model.TransactionCategory.OTHER, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
+        override suspend fun togglePause(id: String): Result<RecurringTemplate> = Result.Success(RecurringTemplate("", 0.0, TransactionType.EXPENSE, ExpenseCategory.OTHER_EXPENSE.name, "", RecurringFrequency.MONTHLY, 0L, null, false, null, 0L, 0L))
         override suspend fun processDueRecurring(): Result<Int> = Result.Success(0)
         override suspend fun loadUpcoming(count: Int): Result<List<com.expense.tracker.feature.recurring.domain.model.UpcomingRecurring>> = Result.Success(emptyList())
     }
@@ -129,7 +130,7 @@ class ExpenseViewModelTest {
 
         viewModel.onAction(ExpenseAction.AmountChanged("25.50"))
         viewModel.onAction(ExpenseAction.TypeSelected(TransactionType.EXPENSE))
-        viewModel.onAction(ExpenseAction.CategorySelected(TransactionCategory.FOOD))
+        viewModel.onAction(ExpenseAction.CategorySelected(ExpenseCategory.FOOD.name))
         viewModel.onAction(ExpenseAction.NoteChanged("Lunch"))
         viewModel.onAction(ExpenseAction.SaveTransaction)
         advanceUntilIdle()
@@ -145,7 +146,6 @@ class ExpenseViewModelTest {
         val viewModel = createViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
-            
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -153,7 +153,7 @@ class ExpenseViewModelTest {
         viewModel.eventFlow.test {
             viewModel.onAction(ExpenseAction.AmountChanged("25.50"))
             viewModel.onAction(ExpenseAction.TypeSelected(TransactionType.EXPENSE))
-            viewModel.onAction(ExpenseAction.CategorySelected(TransactionCategory.FOOD))
+            viewModel.onAction(ExpenseAction.CategorySelected(ExpenseCategory.FOOD.name))
             viewModel.onAction(ExpenseAction.SaveTransaction)
             advanceUntilIdle()
 
@@ -164,11 +164,7 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionWithInvalidAmountDoesNotCallRepository() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = createViewModel(
-            repository = repository,
-            
-            
-        )
+        val viewModel = createViewModel(repository = repository)
 
         viewModel.onAction(ExpenseAction.AmountChanged("0"))
         viewModel.onAction(ExpenseAction.SaveTransaction)
@@ -180,11 +176,7 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionWithNegativeAmountDoesNotCallRepository() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = createViewModel(
-            repository = repository,
-            
-            
-        )
+        val viewModel = createViewModel(repository = repository)
 
         viewModel.onAction(ExpenseAction.AmountChanged("-5"))
         viewModel.onAction(ExpenseAction.SaveTransaction)
@@ -196,11 +188,7 @@ class ExpenseViewModelTest {
     @Test
     fun saveTransactionWithNonNumericAmountDoesNotCallRepository() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = emptyList())
-        val viewModel = createViewModel(
-            repository = repository,
-            
-            
-        )
+        val viewModel = createViewModel(repository = repository)
 
         viewModel.onAction(ExpenseAction.AmountChanged("abc"))
         viewModel.onAction(ExpenseAction.SaveTransaction)
@@ -212,9 +200,7 @@ class ExpenseViewModelTest {
     @Test
     fun deleteTransactionRemovesAndReloads() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = createViewModel(
-            repository = repository,
-        )
+        val viewModel = createViewModel(repository = repository)
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
 
@@ -228,9 +214,7 @@ class ExpenseViewModelTest {
     @Test
     fun cancelDeleteDoesNotCallRepository() = runTest(mainDispatcher) {
         val repository = fakeRepository(transactions = sampleTransactions())
-        val viewModel = createViewModel(
-            repository = repository,
-        )
+        val viewModel = createViewModel(repository = repository)
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
 
@@ -246,8 +230,6 @@ class ExpenseViewModelTest {
     fun typeSelectionUpdatesState() = runTest(mainDispatcher) {
         val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            
-            
         )
 
         viewModel.onAction(ExpenseAction.TypeSelected(TransactionType.INCOME))
@@ -263,17 +245,15 @@ class ExpenseViewModelTest {
     fun categorySelectionUpdatesStateAndClosesMenu() = runTest(mainDispatcher) {
         val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            
-            
         )
 
         viewModel.onAction(ExpenseAction.ToggleCategoryMenu)
         advanceUntilIdle()
         assertTrue(viewModel.state.value.categoryMenuExpanded)
 
-        viewModel.onAction(ExpenseAction.CategorySelected(TransactionCategory.FOOD))
+        viewModel.onAction(ExpenseAction.CategorySelected(ExpenseCategory.FOOD.name))
         advanceUntilIdle()
-        assertEquals(TransactionCategory.FOOD, viewModel.state.value.selectedCategory)
+        assertEquals(ExpenseCategory.FOOD.name, viewModel.state.value.selectedCategory)
         assertEquals(false, viewModel.state.value.categoryMenuExpanded)
     }
 
@@ -281,8 +261,6 @@ class ExpenseViewModelTest {
     fun amountChangedUpdatesState() = runTest(mainDispatcher) {
         val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            
-            
         )
 
         viewModel.onAction(ExpenseAction.AmountChanged("42.50"))
@@ -294,8 +272,6 @@ class ExpenseViewModelTest {
     fun noteChangedUpdatesState() = runTest(mainDispatcher) {
         val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            
-            
         )
 
         viewModel.onAction(ExpenseAction.NoteChanged("Groceries"))
@@ -309,7 +285,6 @@ class ExpenseViewModelTest {
         val viewModel = createViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
-            
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -319,7 +294,7 @@ class ExpenseViewModelTest {
 
         viewModel.onAction(ExpenseAction.AmountChanged("50"))
         viewModel.onAction(ExpenseAction.TypeSelected(TransactionType.INCOME))
-        viewModel.onAction(ExpenseAction.CategorySelected(TransactionCategory.SALARY))
+        viewModel.onAction(ExpenseAction.CategorySelected(IncomeCategory.SALARY.name))
         viewModel.onAction(ExpenseAction.SaveTransaction)
         advanceUntilIdle()
 
@@ -331,8 +306,6 @@ class ExpenseViewModelTest {
     fun toggleFormSheetSetsShowBottomSheetToTrue() = runTest(mainDispatcher) {
         val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            
-            
         )
 
         assertEquals(false, viewModel.state.value.showBottomSheet)
@@ -347,8 +320,6 @@ class ExpenseViewModelTest {
     fun dismissFormSheetSetsShowBottomSheetToFalse() = runTest(mainDispatcher) {
         val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            
-            
         )
 
         viewModel.onAction(ExpenseAction.ToggleFormSheet)
@@ -365,8 +336,6 @@ class ExpenseViewModelTest {
     fun toggleFormSheetTwiceToggles() = runTest(mainDispatcher) {
         val viewModel = createViewModel(
             repository = fakeRepository(transactions = emptyList()),
-            
-            
         )
 
         assertEquals(false, viewModel.state.value.showBottomSheet)
@@ -384,7 +353,6 @@ class ExpenseViewModelTest {
         val viewModel = createViewModel(
             repository = repository,
             timeProvider = FakeTimeProvider(current = 5000L),
-            
         )
 
         viewModel.onAction(ExpenseAction.ToggleFormSheet)
@@ -403,11 +371,7 @@ class ExpenseViewModelTest {
         val repository = mock<TransactionRepository> {
             everySuspend { loadTransactions() } returns Result.Failure(AppError.Message("Database error"))
         }
-        val viewModel = createViewModel(
-            repository = repository,
-            
-            
-        )
+        val viewModel = createViewModel(repository = repository)
 
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
@@ -418,9 +382,9 @@ class ExpenseViewModelTest {
 }
 
 private fun sampleTransactions(): List<Transaction> = listOf(
-    Transaction("tx-1", 45.0, TransactionType.EXPENSE, TransactionCategory.FOOD, "Lunch", 0L),
-    Transaction("tx-2", 100.0, TransactionType.INCOME, TransactionCategory.SALARY, "Paycheck", 1000L),
-    Transaction("tx-3", 15.0, TransactionType.EXPENSE, TransactionCategory.TRANSPORTATION, "Bus pass", 2000L),
+    Transaction("tx-1", 45.0, TransactionType.EXPENSE, ExpenseCategory.FOOD.name, "Lunch", 0L),
+    Transaction("tx-2", 100.0, TransactionType.INCOME, IncomeCategory.SALARY.name, "Paycheck", 1000L),
+    Transaction("tx-3", 15.0, TransactionType.EXPENSE, ExpenseCategory.TRANSPORTATION.name, "Bus pass", 2000L),
 )
 
 private fun fakeRepository(transactions: List<Transaction>): FakeTransactionRepository =
@@ -439,7 +403,7 @@ private class FakeTransactionRepository(
     override suspend fun addTransaction(
         amount: Double,
         type: TransactionType,
-        category: TransactionCategory,
+        category: String,
         note: String,
     ): Result<Transaction> {
         addCount++

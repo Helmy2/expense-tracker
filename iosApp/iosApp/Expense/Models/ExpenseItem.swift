@@ -4,9 +4,14 @@ struct ExpenseItem: Identifiable, Hashable {
     let id: String
     let amount: Double
     let type: ExpenseType
-    let category: ExpenseCategory
+    let category: String
     let note: String
     let createdAtMillis: Int64
+
+    /// Display name for the category, resolved based on transaction type.
+    var categoryDisplayName: String {
+        resolveCategoryDisplayName(category, type: type)
+    }
 
     var formattedAmount: String {
         let formatter = NumberFormatter()
@@ -31,7 +36,7 @@ struct ExpenseItem: Identifiable, Hashable {
         id: String,
         amount: Double,
         type: ExpenseType,
-        category: ExpenseCategory,
+        category: String,
         note: String,
         createdAtMillis: Int64
     ) {

@@ -2,7 +2,7 @@ import Foundation
 
 @Observable
 final class BudgetFormState {
-    var selectedCategory: ExpenseCategory = .other
+    var selectedCategory: ExpenseCategory = .otherExpense
     var limitText: String = ""
     var isSaving: Bool = false
     var limitError: Bool = false
@@ -15,7 +15,7 @@ final class BudgetFormState {
     }
 
     func reset() {
-        selectedCategory = .other
+        selectedCategory = .otherExpense
         limitText = ""
         isSaving = false
         limitError = false

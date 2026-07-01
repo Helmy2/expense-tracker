@@ -4,7 +4,7 @@ import com.expense.tracker.feature.budget.domain.model.Budget
 import com.expense.tracker.feature.budget.domain.model.BudgetDetail
 import com.expense.tracker.feature.budget.domain.model.BudgetWithSpending
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
+import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
 import com.expense.tracker.shared.core.domain.Result
 
 suspend fun BudgetRepository.loadBudgetsOrThrow(): List<Budget> = safeOrThrow("BudgetRepository.loadBudgets") {
@@ -21,7 +21,7 @@ suspend fun BudgetRepository.loadBudgetByIdOrThrow(id: String): Budget? = safeOr
     }
 }
 
-suspend fun BudgetRepository.loadBudgetByCategoryOrThrow(category: TransactionCategory): Budget? = safeOrThrow("BudgetRepository.loadBudgetByCategory") {
+suspend fun BudgetRepository.loadBudgetByCategoryOrThrow(category: ExpenseCategory): Budget? = safeOrThrow("BudgetRepository.loadBudgetByCategory") {
     when (val result = loadBudgetByCategory(category)) {
         is Result.Success -> result.value
         is Result.Failure -> throw RuntimeException(result.error.toString())
@@ -29,7 +29,7 @@ suspend fun BudgetRepository.loadBudgetByCategoryOrThrow(category: TransactionCa
 }
 
 suspend fun BudgetRepository.createBudgetOrThrow(
-    category: TransactionCategory,
+    category: ExpenseCategory,
     monthlyLimit: Double,
 ): Budget = safeOrThrow("BudgetRepository.createBudget") {
     when (val result = createBudget(category, monthlyLimit)) {

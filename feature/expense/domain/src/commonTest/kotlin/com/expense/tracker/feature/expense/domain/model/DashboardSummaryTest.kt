@@ -16,8 +16,8 @@ class DashboardSummaryTest {
     @Test
     fun incomeOnlyReturnsPositiveBalance() {
         val transactions = listOf(
-            Transaction("1", 100.0, TransactionType.INCOME, TransactionCategory.SALARY, "", 1L),
-            Transaction("2", 50.0, TransactionType.INCOME, TransactionCategory.OTHER, "", 2L),
+            Transaction("1", 100.0, TransactionType.INCOME, "SALARY", "", 1L),
+            Transaction("2", 50.0, TransactionType.INCOME, "OTHER_INCOME", "", 2L),
         )
 
         val summary = computeDashboard(transactions)
@@ -30,8 +30,8 @@ class DashboardSummaryTest {
     @Test
     fun expensesOnlyReturnsNegativeBalance() {
         val transactions = listOf(
-            Transaction("1", 30.0, TransactionType.EXPENSE, TransactionCategory.FOOD, "", 1L),
-            Transaction("2", 20.0, TransactionType.EXPENSE, TransactionCategory.TRANSPORTATION, "", 2L),
+            Transaction("1", 30.0, TransactionType.EXPENSE, "FOOD", "", 1L),
+            Transaction("2", 20.0, TransactionType.EXPENSE, "TRANSPORTATION", "", 2L),
         )
 
         val summary = computeDashboard(transactions)
@@ -44,10 +44,10 @@ class DashboardSummaryTest {
     @Test
     fun mixedTransactionsComputeCorrectTotals() {
         val transactions = listOf(
-            Transaction("1", 1000.0, TransactionType.INCOME, TransactionCategory.SALARY, "", 1L),
-            Transaction("2", 200.0, TransactionType.EXPENSE, TransactionCategory.RENT, "", 2L),
-            Transaction("3", 50.0, TransactionType.EXPENSE, TransactionCategory.FOOD, "", 3L),
-            Transaction("4", 100.0, TransactionType.INCOME, TransactionCategory.OTHER, "", 4L),
+            Transaction("1", 1000.0, TransactionType.INCOME, "SALARY", "", 1L),
+            Transaction("2", 200.0, TransactionType.EXPENSE, "RENT", "", 2L),
+            Transaction("3", 50.0, TransactionType.EXPENSE, "FOOD", "", 3L),
+            Transaction("4", 100.0, TransactionType.INCOME, "OTHER_INCOME", "", 4L),
         )
 
         val summary = computeDashboard(transactions)

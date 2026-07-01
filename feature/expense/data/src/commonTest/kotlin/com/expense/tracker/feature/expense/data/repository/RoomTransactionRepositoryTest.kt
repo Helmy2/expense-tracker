@@ -1,7 +1,6 @@
 package com.expense.tracker.feature.expense.data.repository
 
 import com.expense.tracker.feature.expense.domain.model.Transaction
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.shared.core.data.dao.TransactionDao
 import com.expense.tracker.shared.core.data.entity.TransactionEntity
@@ -45,14 +44,14 @@ class RoomTransactionRepositoryTest {
             repository.addTransaction(
                 amount = 42.50,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.FOOD,
+                category = "FOOD",
                 note = "Lunch",
             ),
         ).value
 
         assertEquals(42.50, created.amount)
         assertEquals(TransactionType.EXPENSE, created.type)
-        assertEquals(TransactionCategory.FOOD, created.category)
+        assertEquals("FOOD", created.category)
         assertEquals("Lunch", created.note)
         assertEquals(500L, created.createdAtMillis)
         assertEquals(1, dao.items.size)
@@ -71,7 +70,7 @@ class RoomTransactionRepositoryTest {
             repository.addTransaction(
                 amount = 10.0,
                 type = TransactionType.EXPENSE,
-                category = TransactionCategory.FOOD,
+                category = "FOOD",
                 note = "  Dinner  ",
             ),
         ).value

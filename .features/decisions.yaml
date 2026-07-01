@@ -44,25 +44,33 @@ storage:
       TimeProvider.currentYearMonth(). No repository-to-repository
       cross-feature call remains.
 
+# Split-categories decision — 2026-07-01
+#
+# The single TransactionCategory enum (10 values) is replaced by two
+# type-specific enums: IncomeCategory (8 values) and ExpenseCategory
+# (10 values). This ensures income and expense transactions each have
+# their own relevant category set. The Room entity stores category as
+# a String; the domain layer resolves to the correct enum based on
+# transaction type. Budgets use ExpenseCategory only (expense-only).
+# MVP uses destructive recovery for the schema change.
+
 crossFeatureReuse:
   - feature: budget
     reuse:
       - module: feature/expense/domain
         reason: >
-          Budget feature reuses the TransactionCategory enum from
-          feature/expense/domain for the category picker and as the
-          discriminator for budget rows. This is a value-object reuse
-          (an enum with no behavior) and is acceptable per
-          §32.2. TransactionCategory is a candidate to move to a
-          shared domain module when a third feature needs it.
+          Budget feature reuses ExpenseCategory from feature/expense/domain
+          for the category picker and as the discriminator for budget rows.
+          Value-object reuse per §32.2.
         tracked: true
 
   - feature: recurring-transactions
     reuse:
       - module: feature/expense/domain
         reason: >
-          Recurring templates reuse TransactionCategory and TransactionType
-          enums from feature/expense/domain. Value-object reuse per §32.2.
+          Recurring templates reuse IncomeCategory, ExpenseCategory, and
+          TransactionType enums from feature/expense/domain.
+          Value-object reuse per §32.2.
         tracked: true
       - module: shared/core/data (TransactionDao)
         reason: >

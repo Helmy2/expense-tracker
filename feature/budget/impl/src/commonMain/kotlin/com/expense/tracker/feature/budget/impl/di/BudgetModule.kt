@@ -5,6 +5,7 @@ import com.expense.tracker.feature.budget.api.navigation.BudgetFormRoute
 import com.expense.tracker.feature.budget.api.navigation.BudgetRoute
 import com.expense.tracker.feature.budget.impl.BudgetDetailScreen
 import com.expense.tracker.feature.budget.impl.BudgetDetailViewModel
+import com.expense.tracker.feature.budget.impl.BudgetFormScreen
 import com.expense.tracker.feature.budget.impl.BudgetPresentationMapper
 import com.expense.tracker.feature.budget.impl.BudgetScreen
 import com.expense.tracker.feature.budget.impl.BudgetViewModel
@@ -28,6 +29,14 @@ val budgetUiModule = module {
             onNavigateToDetail = { budgetId -> navigator.goTo(BudgetDetailRoute(budgetId)) },
             onNavigateToCreate = { navigator.goTo(BudgetFormRoute()) },
             onNavigateToEdit = { budgetId -> navigator.goTo(BudgetFormRoute(budgetId)) },
+        )
+    }
+
+    navigation<BudgetFormRoute> { route ->
+        val navigator = koinInject<Navigator>()
+        BudgetFormScreen(
+            budgetId = route.budgetId,
+            onNavigateBack = { navigator.goBack() },
         )
     }
 

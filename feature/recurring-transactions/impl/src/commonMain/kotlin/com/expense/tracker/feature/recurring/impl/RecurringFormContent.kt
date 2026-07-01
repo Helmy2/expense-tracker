@@ -37,11 +37,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
 import com.expense.tracker.shared.core.strings.Res
 import com.expense.tracker.shared.core.strings.expense_cancel
+import com.expense.tracker.shared.core.strings.expense_category_bills
+import com.expense.tracker.shared.core.strings.expense_category_education
+import com.expense.tracker.shared.core.strings.expense_category_entertainment
+import com.expense.tracker.shared.core.strings.expense_category_food
+import com.expense.tracker.shared.core.strings.expense_category_healthcare
+import com.expense.tracker.shared.core.strings.expense_category_other_expense
+import com.expense.tracker.shared.core.strings.expense_category_rent
+import com.expense.tracker.shared.core.strings.expense_category_shopping
+import com.expense.tracker.shared.core.strings.expense_category_transportation
+import com.expense.tracker.shared.core.strings.expense_category_utilities
+import com.expense.tracker.shared.core.strings.income_category_business
+import com.expense.tracker.shared.core.strings.income_category_freelance
+import com.expense.tracker.shared.core.strings.income_category_gift
+import com.expense.tracker.shared.core.strings.income_category_investment
+import com.expense.tracker.shared.core.strings.income_category_other_income
+import com.expense.tracker.shared.core.strings.income_category_refund
+import com.expense.tracker.shared.core.strings.income_category_rental
+import com.expense.tracker.shared.core.strings.income_category_salary
 import com.expense.tracker.shared.core.strings.recurring_amount_label
 import com.expense.tracker.shared.core.strings.recurring_amount_validation
 import com.expense.tracker.shared.core.strings.recurring_category_label
@@ -156,6 +173,7 @@ fun RecurringFormContent(
 
         CategoryDropdown(
             selectedCategory = state.selectedCategory,
+            availableCategories = state.availableCategories(),
             expanded = state.categoryMenuExpanded,
             onToggle = { onAction(RecurringFormAction.ToggleCategoryMenu) },
             onDismiss = { onAction(RecurringFormAction.DismissCategoryMenu) },
@@ -353,15 +371,16 @@ private fun DateField(
 
 @Composable
 private fun CategoryDropdown(
-    selectedCategory: TransactionCategory,
+    selectedCategory: String,
+    availableCategories: List<String>,
     expanded: Boolean,
     onToggle: () -> Unit,
     onDismiss: () -> Unit,
-    onSelect: (TransactionCategory) -> Unit,
+    onSelect: (String) -> Unit,
 ) {
     BoxWithConstraints {
         TextField(
-            value = selectedCategory.asLabel(),
+            value = selectedCategory.asCategoryLabel(),
             onValueChange = {},
             readOnly = true,
             trailingIcon = {
@@ -389,7 +408,7 @@ private fun CategoryDropdown(
             onDismissRequest = onDismiss,
             modifier = Modifier.width(maxWidth),
         ) {
-            TransactionCategory.entries.forEach { category ->
+            availableCategories.forEach { category ->
                 Box(
                     modifier = Modifier.fillMaxWidth().clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -398,7 +417,7 @@ private fun CategoryDropdown(
                     ).padding(vertical = DreamTheme.spacing.sm),
                 ) {
                     Text(
-                        text = category.asLabel(),
+                        text = category.asCategoryLabel(),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )

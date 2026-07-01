@@ -5,7 +5,7 @@ final class RecurringFormState {
     var templateId: String?
     var amountText: String = ""
     var selectedType: ExpenseType = .expense
-    var selectedCategory: ExpenseCategory = .other
+    var selectedCategory: String = ExpenseCategory.food.rawValue
     var selectedFrequency: RecurringFrequencySwift = .monthly
     var noteText: String = ""
     var startDate: Date = Date()
@@ -13,6 +13,10 @@ final class RecurringFormState {
     var hasEndDate: Bool = false
     var isSaving: Bool = false
     var amountError: Bool = false
+
+    var categoryDisplayName: String {
+        resolveCategoryDisplayName(selectedCategory, type: selectedType)
+    }
 
     var isValid: Bool {
         guard let amount = Double(amountText), amount > 0 else { return false }
@@ -27,7 +31,7 @@ final class RecurringFormState {
         templateId = nil
         amountText = ""
         selectedType = .expense
-        selectedCategory = .other
+        selectedCategory = ExpenseCategory.food.rawValue
         selectedFrequency = .monthly
         noteText = ""
         startDate = Date()
@@ -63,6 +67,11 @@ final class RecurringFormState {
         }
         amountError = false
         return true
+    }
+
+    /// Call when selectedType changes to reset category to the first entry of the new type.
+    func resetCategoryForType() {
+        selectedCategory = firstCategoryRawValue(for: selectedType)
     }
 
     var startDateMillis: Int64 {

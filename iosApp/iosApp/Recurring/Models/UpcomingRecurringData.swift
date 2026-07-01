@@ -4,12 +4,17 @@ struct UpcomingRecurringData: Identifiable, Hashable {
     let templateId: String
     let amount: Double
     let type: ExpenseType
-    let category: ExpenseCategory
+    let category: String
     let note: String
     let frequency: RecurringFrequencySwift
     let nextDueDateMillis: Int64
 
     var id: String { templateId }
+
+    /// Display name for the category, resolved based on transaction type.
+    var categoryDisplayName: String {
+        resolveCategoryDisplayName(category, type: type)
+    }
 
     var formattedAmount: String {
         let formatter = NumberFormatter()
@@ -31,6 +36,6 @@ struct UpcomingRecurringData: Identifiable, Hashable {
     }
 
     var displayCategoryAndFrequency: String {
-        "\(category.displayName) \u{00B7} \(frequency.displayName)"
+        "\(categoryDisplayName) \u{00B7} \(frequency.displayName)"
     }
 }

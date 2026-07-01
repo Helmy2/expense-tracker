@@ -4,7 +4,7 @@ struct RecurringTemplateItem: Identifiable, Hashable {
     let id: String
     let amount: Double
     let type: ExpenseType
-    let category: ExpenseCategory
+    let category: String
     let note: String
     let frequency: RecurringFrequencySwift
     let startDateMillis: Int64
@@ -13,6 +13,11 @@ struct RecurringTemplateItem: Identifiable, Hashable {
     let lastGeneratedDateMillis: Int64?
     let createdAtMillis: Int64
     let updatedAtMillis: Int64
+
+    /// Display name for the category, resolved based on transaction type.
+    var categoryDisplayName: String {
+        resolveCategoryDisplayName(category, type: type)
+    }
 
     var formattedAmount: String {
         let formatter = NumberFormatter()

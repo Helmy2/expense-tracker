@@ -1,7 +1,6 @@
 package com.expense.tracker.feature.expense.data.mapper
 
 import com.expense.tracker.feature.expense.domain.model.Transaction
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.shared.core.data.entity.TransactionEntity
 import com.expense.tracker.feature.expense.data.mapper.toDomain
@@ -11,7 +10,7 @@ import kotlin.test.assertEquals
 
 class TransactionMapperTest {
     @Test
-    fun mapsEntityToDomain() {
+    fun mapsExpenseCategoryEntityToDomain() {
         val entity = TransactionEntity(
             id = "txn-1",
             amount = 42.50,
@@ -26,25 +25,44 @@ class TransactionMapperTest {
         assertEquals("txn-1", transaction.id)
         assertEquals(42.50, transaction.amount)
         assertEquals(TransactionType.EXPENSE, transaction.type)
-        assertEquals(TransactionCategory.FOOD, transaction.category)
+        assertEquals("FOOD", transaction.category)
         assertEquals("Lunch", transaction.note)
         assertEquals(1_720_000_000_000, transaction.createdAtMillis)
     }
 
     @Test
+    fun mapsIncomeCategoryEntityToDomain() {
+        val entity = TransactionEntity(
+            id = "txn-2",
+            amount = 5000.0,
+            type = "INCOME",
+            category = "SALARY",
+            note = "Monthly salary",
+            createdAtMillis = 1_720_000_000_000,
+        )
+
+        val transaction = entity.toDomain()
+
+        assertEquals("txn-2", transaction.id)
+        assertEquals(5000.0, transaction.amount)
+        assertEquals(TransactionType.INCOME, transaction.type)
+        assertEquals("SALARY", transaction.category)
+    }
+
+    @Test
     fun mapsDomainToEntity() {
         val transaction = Transaction(
-            id = "txn-2",
+            id = "txn-3",
             amount = 100.0,
             type = TransactionType.INCOME,
-            category = TransactionCategory.SALARY,
+            category = "SALARY",
             note = "Monthly salary",
             createdAtMillis = 1_720_000_000_000,
         )
 
         val entity = transaction.toEntity()
 
-        assertEquals("txn-2", entity.id)
+        assertEquals("txn-3", entity.id)
         assertEquals(100.0, entity.amount)
         assertEquals("INCOME", entity.type)
         assertEquals("SALARY", entity.category)
@@ -55,10 +73,10 @@ class TransactionMapperTest {
     @Test
     fun roundtripPreservesAllFields() {
         val original = Transaction(
-            id = "txn-3",
+            id = "txn-4",
             amount = 99.99,
             type = TransactionType.EXPENSE,
-            category = TransactionCategory.TRANSPORTATION,
+            category = "TRANSPORTATION",
             note = "Bus fare",
             createdAtMillis = 1_720_000_000_000,
         )

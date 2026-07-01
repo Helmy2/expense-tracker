@@ -2,7 +2,6 @@ package com.expense.tracker.shared.di
 
 import com.expense.tracker.feature.expense.domain.model.Transaction
 import com.expense.tracker.feature.expense.domain.model.TransactionType
-import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.repository.TransactionRepository
 import com.expense.tracker.shared.core.domain.Result
 
@@ -16,7 +15,7 @@ suspend fun TransactionRepository.loadTransactionsOrThrow(): List<Transaction> =
 suspend fun TransactionRepository.addTransactionOrThrow(
     amount: Double,
     type: TransactionType,
-    category: TransactionCategory,
+    category: String,
     note: String,
 ): Transaction = safeOrThrow("TransactionRepository.addTransaction") {
     when (val result = addTransaction(amount, type, category, note)) {
