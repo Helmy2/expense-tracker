@@ -214,16 +214,32 @@ class ExpenseViewModelTest {
         val repository = fakeRepository(transactions = sampleTransactions())
         val viewModel = createViewModel(
             repository = repository,
-            
-            
         )
         viewModel.onAction(ExpenseAction.Load)
         advanceUntilIdle()
 
         viewModel.onAction(ExpenseAction.DeleteTransaction("tx-1"))
+        viewModel.onAction(ExpenseAction.ConfirmDelete)
         advanceUntilIdle()
 
         assertEquals(1, repository.deleteCount)
+    }
+
+    @Test
+    fun cancelDeleteDoesNotCallRepository() = runTest(mainDispatcher) {
+        val repository = fakeRepository(transactions = sampleTransactions())
+        val viewModel = createViewModel(
+            repository = repository,
+        )
+        viewModel.onAction(ExpenseAction.Load)
+        advanceUntilIdle()
+
+        viewModel.onAction(ExpenseAction.DeleteTransaction("tx-1"))
+        viewModel.onAction(ExpenseAction.CancelDelete)
+        advanceUntilIdle()
+
+        assertEquals(0, repository.deleteCount)
+        assertEquals(null, viewModel.state.value.deleteTargetId)
     }
 
     @Test

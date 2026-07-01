@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import com.expense.tracker.feature.expense.domain.model.TransactionCategory
 import com.expense.tracker.feature.expense.domain.model.TransactionType
 import com.expense.tracker.feature.recurring.domain.model.RecurringFrequency
@@ -47,6 +45,10 @@ import com.expense.tracker.shared.core.strings.expense_cancel
 import com.expense.tracker.shared.core.strings.recurring_amount_label
 import com.expense.tracker.shared.core.strings.recurring_amount_validation
 import com.expense.tracker.shared.core.strings.recurring_category_label
+import com.expense.tracker.shared.core.strings.recurring_delete_body
+import com.expense.tracker.shared.core.strings.recurring_delete_confirm
+import com.expense.tracker.shared.core.strings.recurring_delete_dismiss
+import com.expense.tracker.shared.core.strings.recurring_delete_title
 import com.expense.tracker.shared.core.strings.recurring_end_date_clear
 import com.expense.tracker.shared.core.strings.recurring_end_date_label
 import com.expense.tracker.shared.core.strings.recurring_frequency_daily
@@ -55,10 +57,6 @@ import com.expense.tracker.shared.core.strings.recurring_frequency_monthly
 import com.expense.tracker.shared.core.strings.recurring_frequency_weekly
 import com.expense.tracker.shared.core.strings.recurring_frequency_yearly
 import com.expense.tracker.shared.core.strings.recurring_note_label
-import com.expense.tracker.shared.core.strings.recurring_delete_body
-import com.expense.tracker.shared.core.strings.recurring_delete_confirm
-import com.expense.tracker.shared.core.strings.recurring_delete_dismiss
-import com.expense.tracker.shared.core.strings.recurring_delete_title
 import com.expense.tracker.shared.core.strings.recurring_save
 import com.expense.tracker.shared.core.strings.recurring_start_date_label
 import com.expense.tracker.shared.core.strings.recurring_type_expense
@@ -66,17 +64,16 @@ import com.expense.tracker.shared.core.strings.recurring_type_income
 import com.expense.tracker.shared.core.strings.recurring_type_label
 import com.expense.tracker.shared.designsystem.DreamTheme
 import com.expense.tracker.shared.designsystem.components.Button
-import kotlinx.datetime.toLocalDateTime
 import com.expense.tracker.shared.designsystem.components.ButtonVariant
 import com.expense.tracker.shared.designsystem.components.CircularProgressIndicator
 import com.expense.tracker.shared.designsystem.components.ComponentSize
-import com.expense.tracker.shared.designsystem.components.Dialog
 import com.expense.tracker.shared.designsystem.components.IconButton
 import com.expense.tracker.shared.designsystem.components.Menu
 import com.expense.tracker.shared.designsystem.components.SegmentedButton
 import com.expense.tracker.shared.designsystem.components.TextField
-
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -298,7 +295,7 @@ private fun DateField(
     ) {
         TextField(
             value = if (dateMillis != null) {
-                val localDateTime = kotlinx.datetime.Instant.fromEpochMilliseconds(dateMillis)
+                val localDateTime = Instant.fromEpochMilliseconds(dateMillis)
                     .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
                 "${localDateTime.month.ordinal + 1}/${localDateTime.dayOfMonth}/${localDateTime.year}"
             } else {

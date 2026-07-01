@@ -16,10 +16,8 @@ import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.TimeProvider
 import com.expense.tracker.shared.core.domain.runSuspendCatching
 import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
@@ -199,13 +197,13 @@ class RoomRecurringTemplateRepository(
         nowMillis: Long,
         zone: TimeZone,
     ): List<Long> {
-        val startDate = Instant.fromEpochMilliseconds(startDateMillis)
+        val startDate = kotlin.time.Instant.fromEpochMilliseconds(startDateMillis)
             .toLocalDateTime(zone).date
-        val today = Instant.fromEpochMilliseconds(nowMillis)
+        val today = kotlin.time.Instant.fromEpochMilliseconds(nowMillis)
             .toLocalDateTime(zone).date
 
         val effectiveStartDate = if (lastGeneratedDateMillis != null) {
-            val lastGenDate = Instant.fromEpochMilliseconds(lastGeneratedDateMillis)
+            val lastGenDate = kotlin.time.Instant.fromEpochMilliseconds(lastGeneratedDateMillis)
                 .toLocalDateTime(zone).date
             maxOf(startDate, lastGenDate.plus(DatePeriod(days = 1)))
         } else {
@@ -213,7 +211,7 @@ class RoomRecurringTemplateRepository(
         }
 
         val endDate = if (endDateMillis != null) {
-            Instant.fromEpochMilliseconds(endDateMillis).toLocalDateTime(zone).date
+            kotlin.time.Instant.fromEpochMilliseconds(endDateMillis).toLocalDateTime(zone).date
         } else {
             null
         }
@@ -243,13 +241,13 @@ class RoomRecurringTemplateRepository(
         afterMillis: Long,
         zone: TimeZone,
     ): Long? {
-        val startDate = Instant.fromEpochMilliseconds(startDateMillis)
+        val startDate = kotlin.time.Instant.fromEpochMilliseconds(startDateMillis)
             .toLocalDateTime(zone).date
-        val afterDate = Instant.fromEpochMilliseconds(afterMillis)
+        val afterDate = kotlin.time.Instant.fromEpochMilliseconds(afterMillis)
             .toLocalDateTime(zone).date
 
         val endDate = if (endDateMillis != null) {
-            Instant.fromEpochMilliseconds(endDateMillis).toLocalDateTime(zone).date
+            kotlin.time.Instant.fromEpochMilliseconds(endDateMillis).toLocalDateTime(zone).date
         } else {
             null
         }

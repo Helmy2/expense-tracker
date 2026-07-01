@@ -30,10 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -145,6 +142,7 @@ fun ExpenseContent(
 
                 TransactionListSection(
                     transactions = contentState.transactions,
+                    deleteTargetId = state.deleteTargetId,
                     onAction = onAction,
                 )
             }
@@ -513,6 +511,7 @@ private fun TransactionCategory.asLabel(): String = when (this) {
 @Composable
 private fun TransactionListSection(
     transactions: List<ExpenseTransactionUi>,
+    deleteTargetId: String?,
     onAction: (ExpenseAction) -> Unit,
 ) {
     Column {
@@ -527,7 +526,8 @@ private fun TransactionListSection(
         transactions.forEach { transaction ->
             TransactionItem(
                 transaction = transaction,
-                onDelete = { onAction(ExpenseAction.DeleteTransaction(transaction.id)) },
+                deleteTargetId = deleteTargetId,
+                onAction = onAction,
             )
             HorizontalDivider(modifier = Modifier.padding(start = DreamTheme.spacing.md))
         }
@@ -538,11 +538,10 @@ private fun TransactionListSection(
 @Composable
 private fun TransactionItem(
     transaction: ExpenseTransactionUi,
-    onDelete: () -> Unit,
+    deleteTargetId: String?,
+    onAction: (ExpenseAction) -> Unit,
 ) {
     val iconTint = if (transaction.isIncome) IncomeGreen else ExpenseRed
-
-    var showDeleteDialog by remember { mutableStateOf(false) }
 
     ListItem(
         headline = transaction.formattedAmount,
@@ -563,7 +562,7 @@ private fun TransactionItem(
             }
         },
         trailingContent = {
-            IconButton(onClick = { showDeleteDialog = true }) {
+            IconButton(onClick = { onAction(ExpenseAction.DeleteTransaction(transaction.id)) }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -573,25 +572,22 @@ private fun TransactionItem(
         },
     )
 
-    if (showDeleteDialog) {
+    if (deleteTargetId == transaction.id) {
         Dialog(
             title = stringResource(Res.string.expense_delete_title),
             text = stringResource(Res.string.expense_delete_body),
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { onAction(ExpenseAction.CancelDelete) },
             confirmButton = {
                 Button(
-            text = stringResource(Res.string.expense_delete_confirm),
-                    onClick = {
-                        showDeleteDialog = false
-                        onDelete()
-                    },
+                    text = stringResource(Res.string.expense_delete_confirm),
+                    onClick = { onAction(ExpenseAction.ConfirmDelete) },
                     variant = ButtonVariant.Destructive,
                 )
             },
             dismissButton = {
                 Button(
                     text = stringResource(Res.string.expense_delete_dismiss),
-                    onClick = { showDeleteDialog = false },
+                    onClick = { onAction(ExpenseAction.CancelDelete) },
                     variant = ButtonVariant.Tertiary,
                 )
             },

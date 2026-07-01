@@ -14,6 +14,7 @@ data class ExpenseState(
     val dashboard: DashboardSummaryUi = DashboardSummaryUi("$0.00", "$0.00", "$0.00"),
     val showBottomSheet: Boolean = false,
     val upcomingRecurring: List<UpcomingRecurringUi> = emptyList(),
+    val deleteTargetId: String? = null,
 )
 
 sealed interface ExpenseContentState {

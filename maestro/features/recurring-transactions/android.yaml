@@ -1,0 +1,42 @@
+appId: com.expense.tracker.android
+---
+- clearState
+- launchApp
+- assertVisible: "Expense Tracker"
+# Navigate to recurring list via the Recurring button in the top bar
+- tapOn: "Recurring"
+- assertVisible: "Recurring Transactions"
+- assertVisible: "No recurring transactions yet"
+# Tap FAB to create a new recurring template
+- tapOn:
+    point: "90%,90%"
+- waitForAnimationToEnd
+- assertVisible: "New Recurring"
+- waitForAnimationToEnd
+# Enter amount
+- tapOn: "Amount"
+- inputText: "1500"
+- pressKey: Back
+# Select type - tap Expense (should be default)
+- tapOn: "Expense"
+# Open category dropdown
+- tapOn:
+    point: "50%,38%"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%,48%"
+# Enter note
+- tapOn: "Note"
+- inputText: "Monthly rent"
+- pressKey: Back
+# Select frequency - tap Monthly
+- tapOn: "Monthly"
+# Dismiss keyboard
+- tapOn:
+    point: "50%,5%"
+# Save the recurring template
+- tapOn: "Save"
+# Verify the template appears in the list
+- assertVisible: ".*1500.*"
+- assertVisible: "Monthly"
+- assertVisible: "Rent"

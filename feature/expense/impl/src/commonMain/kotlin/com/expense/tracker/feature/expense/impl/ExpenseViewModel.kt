@@ -39,7 +39,9 @@ class ExpenseViewModel(
                 it.copy(categoryMenuExpanded = false)
             }
             is ExpenseAction.SaveTransaction -> saveTransaction()
-            is ExpenseAction.DeleteTransaction -> deleteTransaction(action.id)
+            is ExpenseAction.DeleteTransaction -> updateState { it.copy(deleteTargetId = action.id) }
+            is ExpenseAction.ConfirmDelete -> confirmDelete()
+            is ExpenseAction.CancelDelete -> updateState { it.copy(deleteTargetId = null) }
             is ExpenseAction.ToggleFormSheet -> updateState {
                 it.copy(showBottomSheet = !it.showBottomSheet)
             }
@@ -120,13 +122,16 @@ class ExpenseViewModel(
         }
     }
 
-    private suspend fun deleteTransaction(id: String) {
-        when (val result = repository.deleteTransaction(id)) {
+    private suspend fun confirmDelete() {
+        val targetId = state.value.deleteTargetId ?: return
+
+        when (val result = repository.deleteTransaction(targetId)) {
             is Result.Success -> {
+                updateState { it.copy(deleteTargetId = null) }
                 load()
             }
-
             is Result.Failure -> {
+                updateState { it.copy(deleteTargetId = null) }
                 sendEvent(ExpenseEvent.Error(result.error.asMessageText()))
             }
         }
