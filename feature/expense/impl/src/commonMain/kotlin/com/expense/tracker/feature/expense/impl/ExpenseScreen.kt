@@ -17,13 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 
 import com.expense.tracker.shared.core.strings.Res
-import com.expense.tracker.shared.core.strings.expense_budgets_button
 import com.expense.tracker.shared.core.strings.expense_saved_snackbar
 import com.expense.tracker.shared.core.strings.expense_title
-import com.expense.tracker.shared.core.strings.recurring_nav_button
-import com.expense.tracker.shared.designsystem.components.Button
-import com.expense.tracker.shared.designsystem.components.ButtonVariant
-import com.expense.tracker.shared.designsystem.components.IconButton
+import com.expense.tracker.shared.designsystem.components.FloatingActionButton
 import com.expense.tracker.shared.designsystem.components.TopAppBar
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -32,10 +28,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ExpenseScreen(
     viewModel: ExpenseViewModel = koinViewModel(),
-    onNavigateBack: () -> Unit = {},
-    onNavigateToBudgets: () -> Unit = {},
-    onNavigateToRecurring: () -> Unit = {},
-    onNavigateToRecurringEdit: (String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -65,34 +57,22 @@ fun ExpenseScreen(
             TopAppBar(
                 title = stringResource(Res.string.expense_title),
                 navigationIcon = {},
-                actions = {
-                    Button(
-                        text = stringResource(Res.string.recurring_nav_button),
-                        onClick = onNavigateToRecurring,
-                        variant = ButtonVariant.Tertiary,
-                    )
-                    Button(
-                        text = stringResource(Res.string.expense_budgets_button),
-                        onClick = onNavigateToBudgets,
-                        variant = ButtonVariant.Tertiary,
-                    )
-                    IconButton(onClick = { viewModel.onAction(ExpenseAction.ToggleFormSheet) }) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "plus_icon_add_transaction",
-                        )
-                    }
-                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { viewModel.onAction(ExpenseAction.ToggleFormSheet) }) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "add_transaction",
+                )
+            }
+        },
     ) { innerPadding ->
         ExpenseContent(
             state = state,
             onAction = { viewModel.onAction(it) },
             modifier = Modifier.padding(innerPadding),
-            onNavigateToRecurringList = onNavigateToRecurring,
-            onNavigateToRecurringEdit = onNavigateToRecurringEdit,
         )
     }
 }

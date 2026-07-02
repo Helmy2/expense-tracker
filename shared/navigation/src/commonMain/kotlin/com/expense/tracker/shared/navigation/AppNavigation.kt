@@ -10,10 +10,10 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @OptIn(KoinExperimentalAPI::class)
 @Composable
 fun AppNavigation() {
-    val navigator = koinInject<Navigator>()
+    val navigator = koinInject<BottomNavNavigator>()
 
     NavDisplay(
-        backStack = navigator.backStack,
+        backStack = navigator.currentBackStack,
         onBack = { navigator.goBack() },
         entryProvider = koinEntryProvider<NavKey>()
     )

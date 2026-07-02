@@ -1,0 +1,28 @@
+appId: com.expense.tracker.android
+---
+# Bottom Navigation Bar — Android smoke flow
+# Verifies: 3 tabs visible, tab switching, detail push hides bar
+
+- clearState
+- launchApp
+
+# Verify bottom nav bar is visible with 3 tabs
+- assertVisible: "Expenses"
+- assertVisible: "Budgets"
+- assertVisible: "Recurring"
+
+# Verify we start on the Expenses tab
+- assertVisible: "Expense Tracker"
+
+# Tap Budgets tab
+- tapOn: "Budgets"
+- assertVisible: "Budgets"
+- assertVisible: "No budgets yet"
+
+# Tap Recurring tab
+- tapOn: "Recurring"
+- assertVisible: "Recurring Transactions"
+
+# Tap Expenses tab to return
+- tapOn: "Expenses"
+- assertVisible: "Expense Tracker"

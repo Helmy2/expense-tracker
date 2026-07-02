@@ -89,3 +89,31 @@ crossFeatureReuse:
           recurring transactions via RecurringTemplateRepository (domain).
           Allowed via Aggregator Exception [dep-7].
         tracked: true
+
+# Bottom-nav architecture decision — 2026-07-02
+#
+# The app transitions from action-button navigation in the top bar to a
+# persistent bottom NavigationBar with three tabs: Expenses, Budgets,
+# Recurring. The BottomNavNavigator maintains per-tab back stacks so
+# detail/form screens (BudgetDetail, BudgetForm, RecurringForm) are
+# preserved when switching tabs. The bottom bar hides when detail/form
+# screens are pushed.
+#
+# This is a shared navigation concern, not a new feature module. Changes
+# touch shared/navigation (BottomNavNavigator, AppShell), feature/expense/impl
+# (remove action buttons), shared/core/strings (tab labels), and
+# shared/umbrella-ui (navigator wiring). No new domain or data layer needed.
+bottomNav:
+  architecture: per-tab-back-stack
+  navigator: BottomNavNavigator
+  tabs:
+    - expenses (ExpenseRoute)
+    - budgets (BudgetRoute)
+    - recurring (RecurringListRoute)
+  detailScreens:
+    - BudgetDetailRoute
+    - BudgetFormRoute
+    - RecurringFormRoute
+  bottomBarBehavior:
+    visibleOn: tab-root screens
+    hiddenOn: detail/form push screens

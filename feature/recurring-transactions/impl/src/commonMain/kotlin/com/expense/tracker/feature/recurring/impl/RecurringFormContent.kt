@@ -118,7 +118,7 @@ fun RecurringFormContent(
 
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(DreamTheme.spacing.md),
         verticalArrangement = Arrangement.spacedBy(DreamTheme.spacing.md),

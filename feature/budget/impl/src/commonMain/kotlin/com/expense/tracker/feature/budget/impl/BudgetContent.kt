@@ -140,8 +140,7 @@ private fun BudgetList(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(horizontal = DreamTheme.spacing.md, vertical = DreamTheme.spacing.sm),
+        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(DreamTheme.spacing.sm),
     ) {
         budgets.forEachIndexed { index, budget ->

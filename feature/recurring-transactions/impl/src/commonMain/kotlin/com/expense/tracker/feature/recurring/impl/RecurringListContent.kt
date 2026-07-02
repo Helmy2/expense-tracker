@@ -30,10 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -207,8 +203,6 @@ private fun RecurringTemplateItem(
 ) {
     val itemAlpha = if (template.isPaused) 0.5f else 1f
 
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
     Column(
         modifier = Modifier.alpha(itemAlpha),
     ) {
@@ -266,7 +260,7 @@ private fun RecurringTemplateItem(
             ),
             horizontalArrangement = Arrangement.End,
         ) {
-            IconButton(onClick = { showDeleteDialog = true }) {
+            IconButton(onClick = onDeleteClick) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -274,31 +268,6 @@ private fun RecurringTemplateItem(
                 )
             }
         }
-    }
-
-    if (showDeleteDialog) {
-        Dialog(
-            title = stringResource(Res.string.recurring_delete_title),
-            text = stringResource(Res.string.recurring_delete_body),
-            onDismissRequest = { showDeleteDialog = false },
-            confirmButton = {
-                Button(
-                    text = stringResource(Res.string.recurring_delete_confirm),
-                    onClick = {
-                        showDeleteDialog = false
-                        onDeleteClick()
-                    },
-                    variant = ButtonVariant.Destructive,
-                )
-            },
-            dismissButton = {
-                Button(
-                    text = stringResource(Res.string.recurring_delete_dismiss),
-                    onClick = { showDeleteDialog = false },
-                    variant = ButtonVariant.Tertiary,
-                )
-            },
-        )
     }
 }
 

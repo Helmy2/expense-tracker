@@ -373,7 +373,7 @@ class BudgetViewModelTest {
     }
 
     @Test
-    fun setBudgetWithUnknownIdShowsError() = runTest(mainDispatcher) {
+    fun setBudgetWithUnknownIdEmitsErrorEvent() = runTest(mainDispatcher) {
         val budgetRepo = fakeBudgetRepository(budgets = emptyList())
         val viewModel = BudgetViewModel(
             budgetRepository = budgetRepo,
@@ -381,10 +381,12 @@ class BudgetViewModelTest {
             mapper = fakeBudgetMapper(),
         )
 
-        viewModel.onAction(BudgetAction.SetBudget("nonexistent"))
-        advanceUntilIdle()
+        viewModel.eventFlow.test {
+            viewModel.onAction(BudgetAction.SetBudget("nonexistent"))
+            advanceUntilIdle()
 
-        assertIs<BudgetContentState.Error>(viewModel.state.value.contentState)
+            assertIs<BudgetEvent.Error>(awaitItem())
+        }
     }
 
     @Test

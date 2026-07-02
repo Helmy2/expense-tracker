@@ -2,7 +2,6 @@ package com.expense.tracker.feature.budget.impl
 
 import com.expense.tracker.feature.budget.domain.repository.BudgetRepository
 import com.expense.tracker.feature.expense.domain.model.ExpenseCategory
-import com.expense.tracker.shared.core.domain.AppError
 import com.expense.tracker.shared.core.domain.Result
 import com.expense.tracker.shared.core.domain.TimeProvider
 import com.expense.tracker.shared.core.domain.asMessageText
@@ -53,7 +52,6 @@ class BudgetViewModel(
                 )
             }
         } else {
-            updateState { it.copy(contentState = BudgetContentState.Loading) }
             when (val result = budgetRepository.loadBudgetById(budgetId)) {
                 is Result.Success -> {
                     val budget = result.value
@@ -67,13 +65,11 @@ class BudgetViewModel(
                             )
                         }
                     } else {
-                        updateState {
-                            it.copy(contentState = BudgetContentState.Error(com.expense.tracker.shared.core.domain.AppError.Unknown))
-                        }
+                        sendEvent(BudgetEvent.Error("Budget not found"))
                     }
                 }
-                is Result.Failure -> updateState {
-                    it.copy(contentState = BudgetContentState.Error(result.error))
+                is Result.Failure -> {
+                    sendEvent(BudgetEvent.Error(result.error.asMessageText()))
                 }
             }
         }

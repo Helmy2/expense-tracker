@@ -1,0 +1,167 @@
+feature: bottom-nav
+goal: >
+  Add a persistent bottom navigation bar to the app shell, enabling quick
+  switching between the three main destinations (Expenses, Budgets, Recurring
+  Transactions). Each tab maintains its own back stack so detail/form push
+  screens are preserved when switching tabs.
+
+templateArchitecture: modular-hybrid
+platforms:
+  - android
+  - ios
+iosUiStrategy: swiftui
+
+# ── Entities ──────────────────────────────────────────────────────────
+# This is a navigation/presentation feature with no domain entities or
+# data persistence. All state lives in the BottomNavNavigator.
+
+entities: []
+
+# ── Tabs (logical destinations) ───────────────────────────────────────
+tabs:
+  - id: expenses
+    route: ExpenseRoute
+    label: "Expenses"
+    icon: "receipt_long"          # Material icon name
+    selectedIcon: "receipt_long"
+    screen: ExpenseScreen
+
+  - id: budgets
+    route: BudgetRoute
+    label: "Budgets"
+    icon: "account_balance_wallet"
+    selectedIcon: "account_balance_wallet"
+    screen: BudgetScreen
+
+  - id: recurring
+    route: RecurringListRoute
+    label: "Recurring"
+    icon: "schedule"
+    selectedIcon: "schedule"
+    screen: RecurringListScreen
+
+# ── Actions / Inputs ──────────────────────────────────────────────────
+actions:
+  - name: SelectTab
+    input: tabId: String
+    description: Switch to the given top-level tab, resetting its stack to root
+  - name: GoBack
+    input: none
+    description: >
+      Pop the current tab's back stack. If the stack has only the root
+      screen, do nothing (app stays on current tab root).
+
+# ── Screens ───────────────────────────────────────────────────────────
+screens:
+  - name: AppShellWithBottomNav
+    description: >
+      Wraps the existing AppShell with a persistent bottom NavigationBar.
+      The bar is visible on all top-level tab roots. Hidden when pushed
+      into detail/form screens (BudgetDetail, BudgetForm, RecurringForm).
+    states:
+      - name: TabRoot
+        description: A top-level tab at its root screen
+      - name: DetailPushed
+        description: A detail or form screen pushed on top of a tab root
+    bottomBarVisibility:
+      visible: [TabRoot]
+      hidden: [DetailPushed]
+
+# ── Navigation Behavior ───────────────────────────────────────────────
+navigation:
+  style: bottom-nav-with-push
+  perTabBackStack: true
+  description: >
+    The BottomNavNavigator maintains a Map<String, SnapshotStateList<NavKey>>
+    keyed by tab ID. Selecting a tab switches the visible back stack.
+    Detail/form screens push onto the current tab's stack. The bottom bar
+    hides when any detail/form screen is on top.
+
+# ── State ─────────────────────────────────────────────────────────────
+state:
+  model: BottomNavState
+  fields:
+    - name: selectedTabIndex
+      type: Int
+      description: Index of the currently selected tab (0-based)
+    - name: isDetailVisible
+      type: Boolean
+      description: True when a detail/form screen is pushed on any tab
+
+# ── Design Expectations ───────────────────────────────────────────────
+design:
+  component: NavigationBar (from shared/designsystem)
+  style: "Material3 with Dream theme tokens"
+  behavior:
+    - Use existing design-system NavigationBar component
+    - Three tabs with icon + label
+    - Selected tab highlighted with primary color
+    - Bottom bar has surface container color
+    - Bottom bar hides with animation when detail/form screens appear
+    - Each tab icon uses Material Icons (filled variant)
+
+# ── Time-Sensitive Behavior ───────────────────────────────────────────
+timeSensitiveBehavior:
+  usesTimeProvider: false
+
+# ── Required Tests ────────────────────────────────────────────────────
+tests:
+  domain:
+    - none (no domain layer for this feature)
+
+  data:
+    - none (no data layer for this feature)
+
+  presentation:
+    - name: BottomNavViewModel tab selection
+      description: Selecting a tab updates selectedTabIndex
+    - name: BottomNavViewModel detail visibility
+      description: Pushing a detail screen sets isDetailVisible = true
+    - name: BottomNavViewModel back from detail
+      description: Going back from detail sets isDetailVisible = false when stack returns to root
+
+  ui:
+    - name: Bottom bar renders three tabs
+      description: All three tab labels and icons are visible
+    - name: Tab selection highlights
+      description: Tapping a tab highlights it and shows its content
+    - name: Bottom bar hides on detail push
+      description: Bottom bar is not visible when detail/form screen is shown
+
+# ── Cross-Feature Dependencies ────────────────────────────────────────
+crossFeatureDependencies: []
+
+# ── Changes to Existing Modules ───────────────────────────────────────
+changes:
+  - module: shared/navigation
+    type: modify
+    description: >
+      Add BottomNavNavigator class. Update AppShell to include bottom nav bar.
+      Update AppNavigation to use BottomNavNavigator. Add BottomNavState.
+
+  - module: shared/designsystem
+    type: no-change
+    description: >
+      NavigationBar component already exists and is ready to use.
+
+  - module: shared/core/strings
+    type: modify
+    description: >
+      Add string resources for bottom nav tab labels: expenses, budgets, recurring.
+
+  - module: feature/expense/impl
+    type: modify
+    description: >
+      Remove "Budgets" and "Recurring" action buttons from ExpenseScreen top bar.
+      Keep the add FAB and title.
+
+  - module: shared/umbrella-ui
+    type: modify
+    description: >
+      Update navigatorModule to use BottomNavNavigator instead of simple Navigator.
+      Remove startDestination from navigatorModule (BottomNavNavigator manages tabs).
+
+  - module: iosApp-swiftui
+    type: modify
+    description: >
+      Add bottom tab bar to SwiftUI host using TabView.

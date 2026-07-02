@@ -48,7 +48,6 @@
     <string name="expense_dashboard_label">Dashboard</string>
     <string name="expense_type_label">Type</string>
     <string name="expense_saved_snackbar">Transaction saved</string>
-    <string name="expense_budgets_button">Budgets</string>
 
     <!-- Budget feature -->
     <string name="budget_list_title">Budgets</string>
@@ -115,6 +114,10 @@
     <string name="recurring_updated_snackbar">Recurring template updated</string>
     <string name="recurring_deleted_snackbar">Recurring template deleted</string>
     <string name="recurring_upcoming_title">Upcoming Recurring</string>
-    <string name="recurring_nav_button">Recurring</string>
     <string name="recurring_see_all">See All</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_expenses">Expenses</string>
+    <string name="nav_budgets">Budgets</string>
+    <string name="nav_recurring">Recurring</string>
 </resources>

@@ -37,13 +37,23 @@ struct RecurringListView: View {
                     .accessibilityLabel(String(localized: "recurring_ios_add_template"))
                 }
             }
-            .navigationDestination(isPresented: $viewModel.showFormView) {
-                RecurringFormView(
-                    templateId: viewModel.editingTemplateId,
-                    onDismiss: {
-                        Task { await viewModel.load(force: true) }
+            .sheet(isPresented: $viewModel.showFormView) {
+                NavigationStack {
+                    RecurringFormView(
+                        templateId: viewModel.editingTemplateId,
+                        onDismiss: {
+                            viewModel.showFormView = false
+                            Task { await viewModel.load(force: true) }
+                        }
+                    )
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("expense_cancel") {
+                                viewModel.showFormView = false
+                            }
+                        }
                     }
-                )
+                }
             }
             .alert("recurring_delete_title", isPresented: $viewModel.showingDeleteConfirmation) {
                 Button("recurring_delete_dismiss", role: .cancel) { }
@@ -104,19 +114,23 @@ struct RecurringListView: View {
     private func listContent(_ items: [RecurringTemplateItem]) -> some View {
         List {
             ForEach(items) { template in
-                RecurringRowView(template: template)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
+                RecurringRowView(
+                    template: template,
+                    onTogglePause: {
+                        Task { await viewModel.togglePause(id: template.id) }
+                    },
+                    onTap: {
                         viewModel.startEdit(templateId: template.id)
                     }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) {
-                            viewModel.pendingDeleteId = template.id
-                            viewModel.showingDeleteConfirmation = true
-                        } label: {
-                            Label("recurring_delete_confirm", systemImage: "trash")
-                        }
+                )
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
+                        viewModel.pendingDeleteId = template.id
+                        viewModel.showingDeleteConfirmation = true
+                    } label: {
+                        Label("recurring_delete_confirm", systemImage: "trash")
                     }
+                }
             }
         }
         .listStyle(.plain)
@@ -127,50 +141,66 @@ struct RecurringListView: View {
 
 struct RecurringRowView: View {
     let template: RecurringTemplateItem
+    let onTogglePause: () -> Void
+    let onTap: () -> Void
     @Environment(\.dreamColors) private var colors
     @State private var isPaused: Bool
 
-    init(template: RecurringTemplateItem) {
+    init(
+        template: RecurringTemplateItem,
+        onTogglePause: @escaping () -> Void = {},
+        onTap: @escaping () -> Void = {}
+    ) {
         self.template = template
+        self.onTogglePause = onTogglePause
+        self.onTap = onTap
         self._isPaused = State(initialValue: template.isPaused)
     }
 
     var body: some View {
         HStack(spacing: DreamSpacing.sm) {
-            // Icon circle
-            Circle()
-                .fill(iconColor.opacity(0.15))
-                .frame(width: 40, height: 40)
-                .overlay(
-                    Image(systemName: template.type == .income ? "arrow.up" : "arrow.down")
-                        .foregroundColor(iconColor)
-                )
+            // Leading content - tappable for edit
+            HStack(spacing: DreamSpacing.sm) {
+                // Icon circle
+                Circle()
+                    .fill(iconColor.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        Image(systemName: template.type == .income ? "arrow.up" : "arrow.down")
+                            .foregroundColor(iconColor)
+                    )
 
-            // Info
-            VStack(alignment: .leading, spacing: DreamSpacing.xs) {
-                Text(template.formattedAmount)
-                    .font(.dreamTitleMedium)
-                    .foregroundStyle(colors.onSurface)
+                // Info
+                VStack(alignment: .leading, spacing: DreamSpacing.xs) {
+                    Text(template.formattedAmount)
+                        .font(.dreamTitleMedium)
+                        .foregroundStyle(colors.onSurface)
 
-                Text("\(template.categoryDisplayName) \u{00B7} \(template.displayFrequency)")
-                    .font(.dreamBodyMedium)
-                    .foregroundStyle(colors.onSurfaceVariant)
-
-                if !template.isPaused {
-                    Text("\(String(localized: "recurring_next_due")): \(template.displayNextDueDate)")
+                    Text("\(template.categoryDisplayName) \u{00B7} \(template.displayFrequency)")
                         .font(.dreamBodyMedium)
                         .foregroundStyle(colors.onSurfaceVariant)
+
+                    if !template.isPaused {
+                        Text("\(String(localized: "recurring_next_due")): \(template.displayNextDueDate)")
+                            .font(.dreamBodyMedium)
+                            .foregroundStyle(colors.onSurfaceVariant)
+                    }
                 }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap()
             }
 
             Spacer()
 
-            // Pause toggle
+            // Pause toggle - separate from tap gesture
             VStack(alignment: .trailing, spacing: DreamSpacing.xs) {
                 Toggle(isOn: Binding(
                     get: { !template.isPaused },
-                    set: { newValue in
-                        // Toggle pause via shared view model - handled at list level
+                    set: { _ in
+                        isPaused.toggle()
+                        onTogglePause()
                     }
                 )) {
                     EmptyView()
@@ -179,7 +209,6 @@ struct RecurringRowView: View {
                 .toggleStyle(.switch)
                 .tint(colors.primary)
                 .scaleEffect(0.85)
-                .disabled(true) // Handle through list-level action
 
                 if template.isPaused {
                     Text("recurring_paused_label")

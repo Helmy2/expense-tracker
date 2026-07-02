@@ -24,10 +24,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator as M3LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -167,12 +169,14 @@ sealed interface BudgetDetailEvent {
 fun BudgetDetailScreen(
     budgetId: String,
     viewModel: BudgetDetailViewModel = koinViewModel(),
+    formViewModel: BudgetViewModel = koinViewModel(),
     onNavigateBack: () -> Unit = {},
-    onNavigateToEdit: (String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
+    val formState by formViewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -184,6 +188,30 @@ fun BudgetDetailScreen(
                     snackbarHostState.showSnackbar(event.message)
                 }
             }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        formViewModel.eventFlow.collect { event ->
+            when (event) {
+                is BudgetEvent.BudgetSaved -> {
+                    showEditSheet = false
+                    viewModel.onAction(BudgetDetailAction.Load(budgetId))
+                }
+                is BudgetEvent.BudgetDeleted -> {
+                    showEditSheet = false
+                    onNavigateBack()
+                }
+                is BudgetEvent.Error -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(showEditSheet) {
+        if (showEditSheet) {
+            formViewModel.onAction(BudgetAction.SetBudget(budgetId))
         }
     }
 
@@ -211,7 +239,7 @@ fun BudgetDetailScreen(
                 },
                 actions = {
                     if (detail != null) {
-                        IconButton(onClick = { onNavigateToEdit(detail.id) }) {
+                        IconButton(onClick = { showEditSheet = true }) {
                             Icon(
                                 imageVector = Icons.Filled.Edit,
                                 contentDescription = "Edit budget",
@@ -260,6 +288,18 @@ fun BudgetDetailScreen(
                 )
             },
         )
+    }
+
+    if (showEditSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showEditSheet = false },
+            sheetState = rememberModalBottomSheetState(),
+        ) {
+            BudgetFormContent(
+                state = formState,
+                onAction = { formViewModel.onAction(it) },
+            )
+        }
     }
 }
 

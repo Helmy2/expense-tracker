@@ -4,6 +4,11 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
 
+@Deprecated(
+    message = "Use BottomNavNavigator for multi-tab navigation. " +
+        "This single-stack navigator is retained for backward compatibility only.",
+    replaceWith = ReplaceWith("BottomNavNavigator(tabs)"),
+)
 class Navigator(startDestination: NavKey) {
     val backStack: SnapshotStateList<NavKey> = mutableStateListOf(startDestination)
 

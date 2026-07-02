@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     commonMainImplementation(projects.shared.umbrellaCore)
+    commonMainImplementation(projects.shared.core.strings)
     commonMainImplementation(projects.feature.budget.data)
     commonMainImplementation(projects.feature.budget.domain)
     commonMainImplementation(projects.feature.budget.impl)
